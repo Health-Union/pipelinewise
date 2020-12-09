@@ -24,7 +24,7 @@ make_virtualenv() {
     python3 -m pip install --upgrade pip setuptools 
     if [ -f "setup.py" ]; then
         echo "Installing pipelinewise package venv"
-        python3 -m pip install --upgrade -e . --use-feature=2020-resolver
+        python3 -m pip install --upgrade -e . 
     else
         echo "Installing via requirements.txt"
         python3 -m pip install -r requirements.txt || $FAILED_INSTALLS += $1
@@ -103,19 +103,20 @@ EXTRA_CONNECTORS=(
 )
 
 CURRENT_CONNECTORS=(
-    tap-google-sheets
-    tap-s3-csv
+#    tap-google-sheets
+#    tap-s3-csv
     tap-mysql
-    tap-postgres
-    tap-kafka
-    tap-s3-csv
-    tap-adwords
-    tap-google-analytics
-    tap-github
-    tap-slack
+#    tap-postgres
+#    tap-kafka
+#    tap-s3-csv
+#    tap-adwords
+#    tap-google-analytics
+#    tap-github
+#    tap-slack
     target-snowflake
-    target-s3-csv
-    target-postgres
+#    target-s3-csv
+#    target-postgres
+     transform-field
 )
 
 for i in ${CURRENT_CONNECTORS[@]}; do
