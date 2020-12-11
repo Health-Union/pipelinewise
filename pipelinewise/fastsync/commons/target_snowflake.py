@@ -2,6 +2,7 @@ import logging
 import os
 import json
 import time
+import sys
 from typing import List
 
 import boto3
@@ -9,6 +10,14 @@ import snowflake.connector
 from snowflake.connector.encryption_util import SnowflakeEncryptionUtil
 from snowflake.connector.remote_storage_util import \
     SnowflakeFileEncryptionMaterial
+from snowflake.ingest import SimpleIngestManager, \
+    StagedFile
+from requests import HTTPError
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, \
+    Encoding, \
+    PrivateFormat, \
+    NoEncryption
+from cryptography.hazmat.backends import default_backend
 
 from . import utils
 
@@ -30,21 +39,7 @@ class FastSyncTargetSnowflake:
 
         # Get the required parameters from config file and/or environment variables
         aws_profile = self.connection_config.get('aws_profile') or os.environ.get('AWS_PROFILE')
-        aws_access_key_id = self.connection_config.get('aws_access_key_id') or os.environ.get('AWS_ACCESS_KEY_ID')
-        aws_secret_access_key = self.connection_config.get('aws_secret_access_key') or \
-                                os.environ.get('AWS_SECRET_ACCESS_KEY')
-        aws_session_token = self.connection_config.get('aws_session_token') or os.environ.get('AWS_SESSION_TOKEN')
-
-        # AWS credentials based authentication
-        if aws_access_key_id and aws_secret_access_key:
-            aws_session = boto3.session.Session(
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
-                aws_session_token=aws_session_token
-            )
-        # AWS Profile based authentication
-        else:
-            aws_session = boto3.session.Session(profile_name=aws_profile)
+        aws_session = boto3.session.Session(profile_name=aws_profile)
 
         # Create the s3 client
         self.s3 = aws_session.client('s3',
@@ -172,8 +167,13 @@ class FastSyncTargetSnowflake:
               f' field_optionally_enclosed_by=\'\"\' skip_header={int(skip_csv_header)}' \
               f' compression=GZIP binary_format=HEX)'
 
-        # Get number of inserted records - COPY does insert only
-        results = self.query(sql)
+        # Perform load to warehouse
+        if self.connection_config['load_via_snowpipe']:
+            self.load_via_snowpipe(sql, s3_key, table_name)
+        else:
+            # Get number of inserted records - COPY does insert only
+            results = self.query(sql)
+
         if len(results) > 0:
             inserts = results[0].get('rows_loaded', 0)
 
@@ -184,6 +184,79 @@ class FastSyncTargetSnowflake:
 
         LOGGER.info('Deleting %s from S3...', s3_key)
         self.s3.delete_object(Bucket=bucket, Key=s3_key)
+
+    def load_via_snowpipe(self, action_query, s3_key, table_name):
+        def _generate_pipe_name(dbname, schema_table_name):
+            stripped_db_name = dbname.replace('"','')
+            stripped_table_name = schema_table_name.replace('"','')
+            return f"{stripped_db_name}.{stripped_table_name}_s3_pipe"
+
+        def _load_private_key():
+            key_path = getattr(self.connection_config, "private_key_path", "/rsa_key.p8")
+            password = getattr(self.connection_config, "private_key_password", None)
+            with open(key_path, 'rb') as pem_in:
+                private_key_obj = load_pem_private_key(pem_in.read(),password=password,backend=default_backend())
+
+            private_key_text = private_key_obj.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption()).decode('utf-8')
+            return private_key_text
+
+        db_name = self.connection_config['dbname']
+        pipe_name = _generate_pipe_name(db_name, table_name)
+        create_pipe_query = "create pipe {pipe_name} as " + action_query
+        drop_pipe_sql = "drop pipe if exists {pipe_name};"
+
+        # Create snowpipe
+        try:
+            LOGGER.info("Creating snowpipe - %s.", pipe_name)
+            self.query(create_pipe_query)
+        except:
+            LOGGER.error("An error was encounterd while creating the snowpipe")
+
+        # Private key encription required to perform snowpipe data transfer
+        private_key_text = load_private_key()
+
+        ingest_manager = SimpleIngestManager(account=self.connection_config['account'].split('.')[0],
+                                        host=self.connection_config['account']+'.snowflakecomputing.com',
+                                        user=self.connection_config['user'],
+                                        pipe=pipe_name,
+                                        scheme='https',
+                                        port=443,
+                                        private_key=private_key_text)
+
+        # List of files, but wrapped into a class
+        staged_file_list = [StagedFile(s3_key, None)]
+
+        #ingest files using snowpipe
+        try:
+            resp = ingest_manager.ingest_files(staged_file_list)
+            LOGGER.info("Snowpipe has recived the files and will now start loading: %s",
+                             resp['responseCode'])
+        except HTTPError as e:
+            # HTTP error, retry and exit if still fails
+            LOGGER.error(e)
+            try:
+                resp = ingest_manager.ingest_files(staged_file_list)
+            except Exception as e:
+                LOGGER.exception(e)
+                sys.exit(1)
+
+        # Needs to wait for a while to perform transfer, delete pipe after transfer
+        while True:
+            history_resp = ingest_manager.get_history()
+
+            if len(history_resp['files']) > 0:
+                LOGGER.info('''Ingest Report for pipe : %s
+                                    STATUS: %s
+                                    rowsInserted(rowsParsed): %s(%s)''',
+                                    history_resp['pipe'],
+                                    history_resp['completeResult'],
+                                    history_resp['files'][0]['rowsInserted'],
+                                    history_resp['files'][0]['rowsParsed'])
+                self.query(drop_pipe_sql)
+                break
+            else:
+                LOGGER.info('waiting for snowpipe to transfer data...')
+                time.sleep(30)
 
     # grant_... functions are common functions called by utils.py: grant_privilege function
     # "to_group" is not used here but exists for compatibility reasons with other database types

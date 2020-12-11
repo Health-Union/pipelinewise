@@ -36,7 +36,8 @@ setup(name='pipelinewise',
           'ujson==2.0.*',
           'tzlocal==2.0.*',
           'slackclient==2.7.*',
-          'psutil==5.7.2'
+          'psutil==5.7.2',
+          'snowflake-ingest==1.0.2'
       ],
       extras_require={
           'test': [
