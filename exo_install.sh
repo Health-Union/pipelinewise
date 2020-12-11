@@ -103,20 +103,20 @@ EXTRA_CONNECTORS=(
 )
 
 CURRENT_CONNECTORS=(
-#    tap-google-sheets
-#    tap-s3-csv
-    tap-mysql
-#    tap-postgres
-#    tap-kafka
-#    tap-s3-csv
-#    tap-adwords
-#    tap-google-analytics
-#    tap-github
-#    tap-slack
+    tap-google-sheets
+    tap-s3-csv
+     tap-mysql
+    tap-postgres
+    tap-kafka
+    tap-s3-csv
+    tap-adwords
+    tap-google-analytics
+    tap-github
+    tap-slack
     target-snowflake
-#    target-s3-csv
-#    target-postgres
-     transform-field
+    target-s3-csv
+    target-postgres
+    transform-field
 )
 
 for i in ${CURRENT_CONNECTORS[@]}; do
