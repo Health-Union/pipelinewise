@@ -218,7 +218,8 @@
         "tap-shopify",
         "tap-slack",
         "tap-mixpanel",
-        "tap-twilio"
+        "tap-twilio",
+        "tap-facebook"
       ]
     },
     "db_conn": {

@@ -1,0 +1,4 @@
+# git+https://github.com/Health-Union/tap-facebook.git@exo-support
+# git+https://github.com/ArtemHU/tap-facebook.git
+# git+https://github.com/ArtemHU/tap-facebook.git@master
+git+https://github.com/Health-Union/tap-facebook.git@data-5002

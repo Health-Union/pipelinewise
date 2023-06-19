@@ -117,6 +117,7 @@ CURRENT_CONNECTORS=(
     tap-mongodb
     tap-jira
     tap-twilio
+    tap-facebook
     target-snowflake
     target-s3-csv
     target-postgres
