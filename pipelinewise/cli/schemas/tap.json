@@ -219,6 +219,7 @@
         "tap-slack",
         "tap-mixpanel",
         "tap-twilio",
+        "tap-facebook",
         "tap-facebook-pages"
       ]
     },
