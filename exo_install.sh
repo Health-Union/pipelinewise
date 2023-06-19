@@ -121,6 +121,7 @@ CURRENT_CONNECTORS=(
     target-snowflake
     target-s3-csv
     target-postgres
+    tap-facebook-pages
 )
 
 for i in ${CURRENT_CONNECTORS[@]}; do
