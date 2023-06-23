@@ -96,7 +96,7 @@ DEFAULT_CONNECTORS=(
     target-redshift
     target-postgres
     transform-field
-)ß
+)
 EXTRA_CONNECTORS=(
     tap-adwords
     tap-oracle
