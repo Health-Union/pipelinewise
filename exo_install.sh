@@ -96,7 +96,7 @@ DEFAULT_CONNECTORS=(
     target-redshift
     target-postgres
     transform-field
-)
+)ß
 EXTRA_CONNECTORS=(
     tap-adwords
     tap-oracle
@@ -112,7 +112,6 @@ CURRENT_CONNECTORS=(
     tap-postgres
     tap-kafka
     tap-s3-csv
-    tap-adwords
     tap-google-analytics
     tap-github
     tap-slack
