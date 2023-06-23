@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Fail out on an error
+set -eo
+
 # Capture start_time
 start_time=`date +%s`
 
@@ -9,7 +12,6 @@ SRC_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Install pipelinewise venvs in the present working directory
 PIPELINEWISE_HOME=$(pwd)
 VENV_DIR=${PIPELINEWISE_HOME}/.virtualenvs
-FAILED_INSTALLS=()
 
 clean_virtualenvs() {
     echo "Cleaning previous installations in $VENV_DIR"
@@ -27,7 +29,7 @@ make_virtualenv() {
         python3 -m pip install --upgrade -e .
     else
         echo "Installing via requirements.txt"
-        python3 -m pip install -r requirements.txt || $FAILED_INSTALLS += $1
+        python3 -m pip install -r requirements.txt || { echo "ERROR: Failed to install requirements: $1"; exit 1; }
     fi
     deactivate
     echo "virtualenv for $1 deactivated"
@@ -110,7 +112,6 @@ CURRENT_CONNECTORS=(
     tap-postgres
     tap-kafka
     tap-s3-csv
-    tap-adwords
     tap-google-analytics
     tap-github
     tap-slack
