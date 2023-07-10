@@ -122,6 +122,7 @@ CURRENT_CONNECTORS=(
     target-s3-csv
     target-postgres
     tap-facebook-pages
+    transform-field
 )
 
 for i in ${CURRENT_CONNECTORS[@]}; do
