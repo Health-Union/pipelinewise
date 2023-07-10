@@ -1,1 +1,1 @@
-pipelinewise-target-snowflake==2.2.0
+git+https://github.com/Health-Union/pipelinewise-target-snowflake.git

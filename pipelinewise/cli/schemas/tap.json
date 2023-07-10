@@ -362,11 +362,14 @@
         "tap-jira",
         "tap-zuora",
         "tap-google-analytics",
+        "tap-google-sheets",
         "tap-github",
         "tap-shopify",
         "tap-slack",
         "tap-mixpanel",
-        "tap-twilio"
+        "tap-twilio",
+        "tap-facebook",
+        "tap-facebook-pages"
       ]
     },
     "slack_alert_channel": {
