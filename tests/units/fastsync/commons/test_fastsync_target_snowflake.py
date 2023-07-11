@@ -1,4 +1,5 @@
 import json
+import pytest
 from unittest import TestCase
 from unittest.mock import MagicMock
 
@@ -263,8 +264,7 @@ class TestFastSyncTargetSnowflake(TestCase):
             'COPY INTO test_schema."TABLE WITH SPACE AND UPPERCASE_TEMP" FROM \'@dummy_stage/s3 key with space\''
             ' FILE_FORMAT = (type=CSV escape=\'\\x1e\' escape_unenclosed_field=\'\\x1e\''
             ' field_optionally_enclosed_by=\'\"\' skip_header=0'
-            ' compression=GZIP binary_format=HEX)'
-        ]
+            ' compression=GZIP binary_format=HEX)']
 
     def test_grant_select_on_table(self):
         """Validate if GRANT command generated correctly"""
@@ -735,3 +735,46 @@ class TestFastSyncTargetSnowflake(TestCase):
             },
             MetadataDirective='REPLACE',
         )
+
+
+class TestHUFastSyncTargetSnowflake:
+    """
+    Unit tests for HU fastsync target snowflake
+    """
+    on_error_input = [
+        ('The on_error is only defined', {'on_error': 'ABORT'},
+         'ON_ERROR=ABORT'),
+        ('The on_error_fastsync is only defined', {'on_error_fastsync': 'CONTINUE'},
+         'ON_ERROR=CONTINUE'),
+        ('Both [on_error&on_error_fastsync] are defined', {'on_error': 'ABORT', 'on_error_fastsync': 'CONTINUE'},
+         'ON_ERROR=CONTINUE')
+    ]
+
+    @pytest.mark.parametrize('test_name, on_error_option, on_error_expectation',
+                             on_error_input,
+                             ids=[i[0] for i in on_error_input])  # pylint: disable=undefined-variable, undefined-variable
+    def test_copy_to_table_error_on(self,
+                                    test_name,  # pylint: disable=unused-argument
+                                    on_error_option,
+                                    on_error_expectation):
+        """Validate if COPY command generated correctly
+            Case: COPY table: error_on is defined
+        """
+        self.snowflake_error_on = FastSyncTargetSnowflakeMock(connection_config={'s3_bucket': 'dummy_bucket',
+                                                                                 'stage': 'dummy_stage',
+                                                                                 **on_error_option},
+                                                              transformation_config={})
+        self.snowflake_error_on.executed_queries = []
+        self.snowflake_error_on.copy_to_table(s3_key='s3_key',
+                                              target_schema='test_schema',
+                                              table_name='test_table',
+                                              size_bytes=1000,
+                                              is_temporary=True,
+                                              skip_csv_header=False)
+
+        assert self.snowflake_error_on.executed_queries == [
+            'COPY INTO test_schema."TEST_TABLE_TEMP" FROM \'@dummy_stage/s3_key\''
+            ' FILE_FORMAT = (type=CSV escape=\'\\x1e\' escape_unenclosed_field=\'\\x1e\''
+            ' field_optionally_enclosed_by=\'\"\' skip_header=0'
+            ' compression=GZIP binary_format=HEX)'
+            f' {on_error_expectation}']
