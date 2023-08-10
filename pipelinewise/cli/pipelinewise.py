@@ -2114,9 +2114,10 @@ TAP RUN SUMMARY
 
             # create a temp file with the content being the given catalog object
             # we need this file to execute the validation cli command
-            temp_catalog_file = utils.create_temp_file(
+            file_descriptor, temp_catalog_file = utils.create_temp_file(
                 dir=self.get_temp_dir(), prefix='properties_', suffix='.json'
-            )[1]
+            )
+            os.close(file_descriptor)
 
             utils.save_json(catalog, temp_catalog_file)
 
