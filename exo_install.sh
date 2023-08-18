@@ -23,7 +23,7 @@ make_virtualenv() {
     python3 -m venv $VENV_DIR/$1
     source $VENV_DIR/$1/bin/activate && echo "Venv for $1 activated"
     echo "excuting in venv $VIRTUAL_ENV"
-    python3 -m pip install --upgrade pip setuptools 
+    python3 -m pip install --upgrade pip setuptools
     if [ -f "setup.py" ]; then
         echo "Installing pipelinewise package venv"
         python3 -m pip install --upgrade -e .
@@ -40,20 +40,20 @@ install_connector() {
     echo "--------------------------------------------------------------------------"
     echo "Installing $1 connector..."
     echo "--------------------------------------------------------------------------"
-
+    
     CONNECTOR_DIR=$SRC_DIR/singer-connectors/$1
     if [[ ! -d $CONNECTOR_DIR ]]; then
         echo "ERROR: Directory not exists and does not look like a valid singer connector: $CONNECTOR_DIR"
         exit 1
     fi
-
+    
     cd $CONNECTOR_DIR
     make_virtualenv $1
 }
 
 print_installed_connectors() {
     cd $SRC_DIR
-
+    
     echo
     echo "--------------------------------------------------------------------------"
     echo "Installed components:"
@@ -61,7 +61,7 @@ print_installed_connectors() {
     echo
     echo "Component            Version"
     echo "-------------------- -------"
-
+    
     for i in `ls $VENV_DIR`; do
         source $VENV_DIR/$i/bin/activate
         VERSION=`python3 -m pip list | grep "$i[[:space:]]" | awk '{print $2}'`
@@ -110,7 +110,6 @@ CURRENT_CONNECTORS=(
     tap-s3-csv
     tap-mysql
     tap-postgres
-    tap-kafka
     tap-s3-csv
     tap-google-analytics
     tap-github
@@ -123,6 +122,7 @@ CURRENT_CONNECTORS=(
     target-s3-csv
     target-postgres
     tap-facebook-pages
+    transform-field
 )
 
 for i in ${CURRENT_CONNECTORS[@]}; do

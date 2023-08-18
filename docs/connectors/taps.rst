@@ -42,6 +42,27 @@ PipelineWise can replicate data from the following data sources:
 
         .. container:: img-hover-zoom
 
+          .. image:: ../img/mongodb-logo.png
+             :target: taps/mongodb.html
+
+        :ref:`tap-mongodb`
+
+
+.. container:: tile-wrapper
+
+    .. container:: tile
+
+        .. container:: img-hover-zoom
+
+          .. image:: ../img/snowflake-logo.png
+             :target: taps/snowflake.html
+
+        :ref:`tap-snowflake`
+
+    .. container:: tile
+
+        .. container:: img-hover-zoom
+
           .. image:: ../img/oracle-logo.png
              :target: taps/oracle.html
 
@@ -67,16 +88,8 @@ PipelineWise can replicate data from the following data sources:
 
         :ref:`tap-kafka`
 
+
 .. container:: tile-wrapper
-
-    .. container:: tile
-
-        .. container:: img-hover-zoom
-
-          .. image:: ../img/snowflake-logo.png
-             :target: taps/snowflake.html
-
-        :ref:`tap-snowflake`
 
     .. container:: tile
 
@@ -87,8 +100,6 @@ PipelineWise can replicate data from the following data sources:
 
         :ref:`tap-salesforce`
 
-.. container:: tile-wrapper
-
     .. container:: tile
 
         .. container:: img-hover-zoom
@@ -98,6 +109,8 @@ PipelineWise can replicate data from the following data sources:
 
         :ref:`tap-zendesk`
 
+.. container:: tile-wrapper
+
     .. container:: tile
 
         .. container:: img-hover-zoom
@@ -106,6 +119,15 @@ PipelineWise can replicate data from the following data sources:
              :target: taps/jira.html
 
         :ref:`tap-jira`
+
+    .. container:: tile
+
+        .. container:: img-hover-zoom
+
+          .. image:: ../img/twilio-logo.png
+             :target: taps/twilio.html
+
+        :ref:`tap-twilio`
 
 .. container:: tile-wrapper
 
@@ -117,7 +139,7 @@ PipelineWise can replicate data from the following data sources:
              :target: taps/zuora.html
 
         :ref:`tap-zuora`
-    
+
     .. container:: tile
 
         .. container:: img-hover-zoom
@@ -133,21 +155,10 @@ PipelineWise can replicate data from the following data sources:
 
         .. container:: img-hover-zoom
 
-          .. image:: ../img/mongodb-logo.png
-             :target: taps/mongodb.html
-
-        :ref:`tap-mongodb`
-
-    .. container:: tile
-
-        .. container:: img-hover-zoom
-
           .. image:: ../img/github-logo.png
              :target: taps/github.html
 
         :ref:`tap-github`
-
-.. container:: tile-wrapper
 
     .. container:: tile
 
@@ -158,6 +169,9 @@ PipelineWise can replicate data from the following data sources:
 
         :ref:`tap-shopify`
 
+
+.. container:: tile-wrapper
+
     .. container:: tile
 
         .. container:: img-hover-zoom
@@ -167,8 +181,6 @@ PipelineWise can replicate data from the following data sources:
 
         :ref:`tap-slack`
 
-.. container:: tile-wrapper
-
     .. container:: tile
 
         .. container:: img-hover-zoom
@@ -177,6 +189,8 @@ PipelineWise can replicate data from the following data sources:
              :target: taps/mixpanel.html
 
         :ref:`tap-mixpanel`
+
+
 
 Configuring taps
 ----------------
@@ -199,3 +213,4 @@ Configuring taps
    taps/shopify
    taps/slack
    taps/mixpanel
+   taps/twilio

@@ -1,3 +1,409 @@
+0.54.0 (2023-07-04)
+-------------------
+
+- Add support for the new limit config in `tap-postgres` 
+- Bump pipelinewise_tap_s3_csv from `3.0.0` to `3.0.1` 
+- Bump pipelinewise-tap-postgres from `1.8.4` to `2.1.0`
+- Bugfix replication slot creation in partial sync
+
+0.53.4 (2023-06-22)
+-------------------
+
+- Bugfix for trigger unwanted tables syncing trigger
+- Bugfix for building `wal2json` in PostgreSQL Docker image
+- Bump `pipelinewise-tap-mysql` from `1.5.3` to `1.5.4`
+
+0.53.3 (2023-05-16)
+-------------------
+
+- Bugfix for removing pid file in stop_tap command
+
+0.53.2 (2023-04-25)
+-------------------
+
+- Bump `pipelinewise-tap-mysql` from `1.5.2` to `1.5.3` to mitigate bug in MariaDB 10.6.12
+
+0.53.1 (2023-04-21)
+-------------------
+
+- Rollback `snowflake-connector-python` from `2.8.2` to `2.7.6`
+
+0.53.0 (2023-04-13)
+-------------------
+
+- Bugfix for renaming log files when stopping the tap
+- Bump `snowflake-connector-python` from `2.7.6` to `2.8.2`
+- Remove `tap-adwords` 
+
+0.52.2 (2023-03-20)
+-------------------
+
+- Bump `pipelinewise-tap-slack` from `1.1.0` to `1.1.1`
+
+0.52.1 (2023-02-22)
+-------------------
+
+- Extend silentremove to support deleting folders
+- Bugfix for selected fastsync tables
+- Bugfix for graceful exit
+
+0.52.0 (2023-02-02)
+-------------------
+
+- Bump `tap-s3-csv` from `2.0.0` to `3.0.0`
+- Implement Defined Partial Sync for `MariaDB` and `Postgres` to `SnowFlake`
+
+0.51.0 (2022-12-10)
+-------------------
+
+- Drop `pipelinewise-tap-postgres` from `2.0.0` to `1.8.4`:
+  - wal2json format version 2 causing issues on older Postgres servers
+
+- Bump `pipelinewise-tap-kafka` from `7.1.2` to `8.0.0`
+  - Switch from `subscribe` to `assign` for better initial offset control
+  - Implement specifying partitions in configuration
+
+0.50.0 (2022-12-05)
+-------------------
+
+- Bump `pipelinewise-tap-postgres` from `1.8.4` to `2.0.0`:
+  - Use wal2json format version 2
+
+- Bump `psycopg2-binary` from `2.8.6` to `2.9.5`
+
+0.49.0 (2022-10-27)
+-------------------
+- Added `taps` option for `import` command to make it possible for importing specific taps.
+
+0.48.7 (2022-10-19)
+-------------------
+
+- Bump `pipelinewise-tap-kafka` from `7.1.0` to `7.1.2`
+  - Introducing the use of the seek method to reset the source partition offsets at the start of a run
+
+0.48.6 (2022-10-06)
+-------------------
+
+- Bump `joblib` from `1.1.0` to `1.2.0`
+- Bugfix for closing `MySQL`/`MariaDB` conenctions in `FastSync`
+- Removing `FastSync` from `s3-csv` and using only `singer`
+
+0.48.5 (2022-09-22)
+-------------------
+
+- Partial sync will now create table in target if it doesn't exist. [#1014](https://github.com/transferwise/pipelinewise/pull/1014)
+
+0.48.4 (2022-09-09)
+-------------------
+
+- Bump `pipelinewise-tap-postgres` from `1.8.3` to `1.8.4`.
+
+0.48.3 (2022-09-08)
+-------------------
+
+- Refactor partialsync to use merge (#1010)
+
+0.48.2 (2022-09-01)
+-------------------
+
+- Bump `pipelinewise-tap-mysql` from `1.5.1` to `1.5.2`.
+
+0.48.1 (2022-07-21)
+-------------------
+
+- Partial sync bug fixes for selected tables and space in the name of table and values
+
+0.48.0 (2022-07-14)
+-------------------
+
+- Bump `pipelinewise-tap-kakfa` from `7.0.0` to `7.1.0`.
+
+0.47.1 (2022-07-08)
+-------------------
+
+- Partial sync bug fix for `start` and `end` values
+
+0.47.0 (2022-07-07)
+-------------------
+
+- Bump `ujson` from  `5.3.0` to `5.4.0`
+- Partial sync for `MariaDB` and `Postgres`
+
+0.46.0 (2022-06-14)
+-------------------
+
+- Bump `target-s3-csv` to `2.0.0`
+- Allow non-x86 architectures for dev-project
+- Rename .env to .env.template
+- [CI][Fix] Linting and unit testing not running for external PRs
+- Bump `ujson` from `5.1.0` to `5.3.0`
+
+0.45.0 (2022-05-12)
+-------------------
+
+- Bump `target-snowflake` to `2.2.0`
+
+0.44.0 (2022-05-05)
+-------------------
+
+- Bump `target-snowflake` to `2.1.0`
+
+0.43.1 (2022-04-11)
+-------------------
+
+*Fixes*
+- Patch target-snowflake.
+- Bump dependencies
+
+
+0.43.0 (2022-04-07)
+-------------------
+
+*Breaking changes*
+- Bump `tap-kafka` to `7.0.0`
+- Drop not null constraints on Snowflake tables PK columns.
+
+*Added*
+- Send failure alerts to slack channel defined in tap, `slack_alert_channel`
+- Backup state file before tap starting
+
+*Fixes*
+- Patch tap-mysql to `1.5.1`
+- Don't use log files to check tap status before starting it.
+- Change to e2e tests structure
+
+0.42.1 (2022-03-17)
+-------------------
+- Bump `tap-kafka` to `6.0.0`
+
+0.42.0 (2022-03-17)
+-------------------
+- Allow non-default configuration directory
+- Improved OS signal handling for graceful termination
+- Relax limit on split_file_max_chunks
+- Make tap-mysql-fastsync compatible with MySQL 8
+- Fixed failing pg-to-pg fastsync on empty tables
+- Replace `ansible` with `ansible-core`
+- Bump `tap-postgres` to `1.8.3`
+- Bump `tap-snowflake` to `3.0.0`
+- Check singer connectors installable for Python 3.7 3.8 3.9
+- Support log_based using GTID for MySQL and Mariadb
+
+0.41.0 (2022-02-10)
+-------------------
+
+- Dropped support for python 3.6
+- Bump `ujson` from `4.3.0` to `5.1.0`
+- Bump `pipelinewise-tap-s3-csv` to `2.0.0`
+- Fix for config json files
+- Fix: e2e tests fail when SF credentials are not present
+
+0.40.0 (2022-01-27)
+-------------------
+- Bump `pipelinewise-tap-kafka` from `5.0.1` to `5.1.0`
+
+0.39.1 (2022-01-26)
+-------------------
+- Bump `pipelinewise-tap-kafka` from `5.0.0` to `5.0.1`
+
+0.39.0 (2022-01-25)
+-------------------
+- Bump `pipelinewise-tap-kafka` from `4.0.1` to `5.0.0`
+- Bump `pipelinewise-target-bigquery` from `1.1.1` to `1.2.0`
+- Bump `pipelinewise-transform-field` from `2.2.0` to `2.3.0`
+- Prevent usage of extended transformation feature when FastSync exists
+- Fixed fastsync from postgres to bigquery
+- Fixed an issue when `SplitGzipFile` doesn't work with binary mode
+
+0.38.0 (2022-01-14)
+-------------------
+- MySQL tap now connects to replica instance during fastsync if credentials are provided
+- Added fastsync support for MongoDB Atlas
+- Docker base image to Python 3.8
+- Bump `pyyaml` from `5.4.1` to `6.0`
+- Bump `pipelinewise-target-snowflake` from `1.14.1` to `1.15.0`
+- Bump `pipelinewise-tap-s3-csv` from `1.2.2` to `1.2.3`
+- Bump `pipelinewise-tap-postgres` from `1.8.1` to `1.8.2`
+
+0.37.2 (2021-12-10)
+-------------------
+- Bump `pipelinewise-tap-github` from `1.0.2` to `1.0.3`
+
+
+0.37.1 (2021-12-10)
+-------------------
+- Make a postfix for Snowflake schemas in end-to-end tests.
+- Bump `google-cloud-bigquery` from `1.24.0` to `2.31.0` ([Changelog](https://github.com/googleapis/python-bigquery/blob/main/CHANGELOG.md#2310-2021-11-24))
+
+
+0.37.0 (2021-11-19)
+-------------------
+
+*New*
+- Added cleanup method for state file.
+- Bump `pytest-cov` from `2.12.1` to `3.0.0` ([Changelog](https://github.com/pytest-dev/pytest-cov/blob/master/CHANGELOG.rst#300-2021-10-04))
+- Bump `joblib` from `1.0.0` to `1.1.0`
+- Bump `flake8` from `3.9.2` to `4.0.1`
+- Bump `jinja2` from `3.0.1` to `3.0.2`
+- Bump `python-dotenv` from `0.19.0` to `0.19.1`
+- Bump `target-snowflake` from `1.14.0` to `1.14.1`
+- Bump `ansible` from `4.4.0` to `4.7.0`
+- Bump `pytest` from `6.2.4` to `6.2.5`
+
+*Changes*
+- Fully migrate CI to Github Actions.
+- Update `ujson` requirement from `==4.1.*` to `>=4.1,<4.3`
+- Update `tzlocal` requirement from `<2.2,>=2.0` to `>=2.0,<4.1`
+
+*Fixes*
+- Make process in docker-compose file.
+- proc.info parsing in a case cmdline is None!
+
+
+0.36.0 (2021-09-30)
+-------------------
+
+*New*
+- Add new transformation type: **MASK-STRING-SKIP-ENDS**
+- Bump `pipelinewise-target-snowflake` from `1.13.1` to `1.14.0` ([Changelog](https://github.com/transferwise/pipelinewise-target-snowflake/blob/master/CHANGELOG.md#1140-2021-09-30))
+    - Support `date` property format
+    - Don't log record on failure to avoind exposing data
+
+*Changes*
+- Use Makefile for installation
+- Enforce PEP8
+
+*Fixes*
+- Dates out of range (with year > 9999) in FastSync from PG.
+- Bump `pipelinewise-tap-postgres` from `1.8.0` to `1.8.1` ([Changelog](https://github.com/transferwise/pipelinewise-tap-postgres/blob/master/CHANGELOG.md#181-2021-09-23))
+    -  LOG_BASED: Handle dates with year > 9999.
+    -  INCREMENTAL & FULL_TABLE: Avoid processing timestamps arrays as timestamp
+
+- `Decimal` not JSON serializable in FastSync MongoDB
+- Don't use non-existent FastSync for MongoDB-Redshift pipelines.
+
+
+0.35.2 (2021-08-17)
+-------------------
+- Bump `pipelinewise-tap-github` from `1.0.1` to `1.0.2`
+- Update a few vulnerable or outdated dependencies to latest
+
+0.35.1 (2021-08-13)
+-------------------
+- Bump `pipelinewise-tap-github` from `1.0.0` to `1.0.1`
+- Bump `pipelinewise-tap-kafka` from `4.0.0` to `4.0.1`
+- Bump `tap-jira` from `2.0.0` to `2.0.1`
+- Bump `pipelinewise-target-s3-csv` from `1.4.0` to `1.5.0`
+
+0.35.0 (2021-08-04)
+-------------------
+- Support `"none"` as a value for `--connectors` in `install.sh` script to install a stripped down Pipelinewise without any connectors.
+- Optimize Dockerfile
+- Do not log invalid json objects if they fail validation against json schema.
+- Replace `github-tap` with fork `pipelinewise-tap-github` version `1.0.0`
+- Add schema validation for github tap
+- Increase batch_size_rows from 1M to 5M
+- Increase split_file_chunk_size_mb from 2500 to 5000
+- Add latest tag to docker image
+- Bump `pipelinewise-tap-s3-csv` from `1.2.1` to `1.2.2`
+- Update pymongo requirement from `<3.12,>=3.10` to `>=3.10,<3.13`
+
+0.34.1 (2021-07-15)
+-------------------
+- Bump `pipelinewise-target-snowflake` from `1.13.0` to `1.13.1`
+    - Fixed an issue with S3 metadata required for decryption not being included in archived load files
+- Fixed an issue in fastsync to BigQuery data type mapping
+- Add `location` config parameter to fastsync to BigQuery
+
+0.34.0 (2021-06-24)
+-------------------
+- Add `split_large_files` option to FastSync target-snowflake to load large files in parallel into Snowflake
+- Add `archive_load_files` option to FastSync target-snwoflake to archive load files on S3
+- Bump `pipelinewise-tap-postgres` from `1.7.1` to `1.8.0`
+    - Add discovering of partitioned table
+- Bump `pipelinewise-target-snowflake` from `1.12.0` to `1.13.0`
+    - Add `archive_load_files` parameter to optionally archive load files on S3
+
+0.33.0 (2021-04-12)
+-------------------
+
+- Add `batch_wait_limit_seconds` option to every tap/target combination
+- Bump `pipelinewise-target-snowflake` from `1.11.1` to `1.12.0`
+    - Add `batch_wait_limit_seconds` option
+- Bump `pipelinewise-tap-mysql` from `1.4.2` to `1.4.3`
+- Bump a few vulnerable and security outdated packages
+
+0.32.1 (2021-03-26)
+-------------------
+
+- Bump `pipelinewise-target-snowflake` from `1.11.0` to `1.11.1`
+
+0.32.0 (2021-03-22)
+-------------------
+
+- Add transformation validation post import check to detect and deny load time transformations that's changing data types
+- Fixed an issue when fastsync to Postgres and Snowflake were failing if multiple load time transformations defined on the same column
+- Fixed an issue when fastsync not using unique file names and causing table name collision in the target database
+- Bump `pipelinewise-tap-mysql` from `1.4.0` to `1.4.2`
+    - Fixed an issue when data sometimes lost during `LOG_BASED` replication
+- Bump `pipelinewise-tap-twilio` from `1.1.1` to `1.1.2`
+    - Fix missing elements for streams without ordered response
+- Bump `pipelinewsie-target-snowflake` from `1.10.1` to `1.11.0`
+
+0.31.1 (2021-02-26)
+-------------------
+
+- Add support for AWS profile based authentication to FastSync tap-s3-csv.
+
+0.31.0 (2021-02-23)
+-------------------
+
+- Update TransferWise references to Wise
+- Bump `pipelinewise-tap-twilio` to `1.1.1`
+- Bump `psycopg-binary` from `2.8.5` to `2.8.6`
+
+0.30.0 (2021-01-22)
+-------------------
+
+- Drop postgres replication slot in case of full re-sync of a tap
+- Add `fastsync_parallelism` optional parameter to customize the number of cores to use for parallelisation in FastSync
+- Bump `pipelinewise-tap-twilio` to `1.0.2`
+
+0.29.0 (2021-01-13)
+-------------------
+
+- Add tap-twilio
+
+0.28.1 (2021-01-12)
+-------------------
+
+- patch `pipelinewise-tap-snowflake`
+- Bumping dependencies of Pipelinewise
+
+0.28.0 (2021-01-08)
+-------------------
+
+**New**
+- Support environement variables in tap yaml files and rendering them with jinja2 template.
+
+**Fixes**
+- bump pipelinewise-target-snowflake to 1.10.1
+- Map Mysql's `tinyint(1) unsigned` column type to targets' number column type
+- Bumping dependencies of Pipelinewise
+- Detect the copyright year dynamically
+
+0.27.0 (2020-12-04)
+-------------------
+
+- Bumping `snowflake-connector-python` across all componenets that uses to `2.3.6`
+- Tagging all queries issues to Snowflake by FastSync Snowflake and singer target-snowflake.
+- Add ssl support to mongodump in FastSync mongodb.
+- Add support for MySQL spatial types.
+
+- Fix issues build PPW docker images
+- Update documentation.
+
+
 0.26.0 (2020-10-30)
 -------------------
 

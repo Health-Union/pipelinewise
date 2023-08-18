@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import os
 import sys
-import time
-from functools import partial
-from argparse import Namespace
+import glob
+import re
 import multiprocessing
-from typing import Union
 
+from argparse import Namespace
+from typing import Union
+from functools import partial
 from datetime import datetime
+
 from ..logger import Logger
 from .commons import utils
 from .commons.tap_postgres import FastSyncTapPostgres
@@ -22,7 +24,7 @@ REQUIRED_CONFIG_KEYS = {
         'user',
         'password',
         'dbname',
-        'tap_id'    # tap_id is required to generate unique replication slot names
+        'tap_id',  # tap_id is required to generate unique replication slot names
     ],
     'target': [
         'account',
@@ -32,21 +34,21 @@ REQUIRED_CONFIG_KEYS = {
         'warehouse',
         's3_bucket',
         'stage',
-        'file_format'
-    ]
+        'file_format',
+    ],
 }
 
 LOCK = multiprocessing.Lock()
 
 
-def tap_type_to_target_type(pg_type):
+def tap_type_to_target_type(pg_type, *_):
     """Data type mapping from Postgres to Snowflake"""
     return {
         'char': 'VARCHAR',
         'character': 'VARCHAR',
         'varchar': 'VARCHAR',
         'character varying': 'VARCHAR',
-        'text': 'TEXT',
+        'text': 'VARCHAR',
         'bit': 'BOOLEAN',
         'varbit': 'NUMBER',
         'bit varying': 'NUMBER',
@@ -72,7 +74,7 @@ def tap_type_to_target_type(pg_type):
         # ARRAY is uppercase, because postgres stores it in this format in information_schema.columns.data_type
         'ARRAY': 'VARIANT',
         'json': 'VARIANT',
-        'jsonb': 'VARIANT'
+        'jsonb': 'VARIANT',
     }.get(pg_type, 'VARCHAR')
 
 
@@ -81,10 +83,12 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
     """Sync one table"""
     postgres = FastSyncTapPostgres(args.tap, tap_type_to_target_type)
     snowflake = FastSyncTargetSnowflake(args.target, args.transform)
+    tap_id = args.target.get('tap_id')
+    archive_load_files = args.target.get('archive_load_files', False)
 
     try:
         dbname = args.tap.get('dbname')
-        filename = 'pipelinewise_fastsync_{}_{}_{}.csv.gz'.format(dbname, table, time.strftime('%Y%m%d-%H%M%S'))
+        filename = utils.gen_export_filename(tap_id=tap_id, table=table)
         filepath = os.path.join(args.temp_dir, filename)
         target_schema = utils.get_target_schema(args.target, table)
 
@@ -92,26 +96,60 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
         postgres.open_connection()
 
         # Get bookmark - LSN position or Incremental Key value
-        bookmark = utils.get_bookmark_for_table(table, args.properties, postgres, dbname=dbname)
+        bookmark = utils.get_bookmark_for_table(
+            table, args.properties, postgres, dbname=dbname
+        )
 
         # Exporting table data, get table definitions and close connection to avoid timeouts
-        postgres.copy_table(table, filepath)
-        size_bytes = os.path.getsize(filepath)
+        postgres.copy_table(
+            table,
+            filepath,
+            split_large_files=args.target.get('split_large_files'),
+            split_file_chunk_size_mb=args.target.get('split_file_chunk_size_mb'),
+            split_file_max_chunks=args.target.get('split_file_max_chunks'),
+        )
+        file_exist = os.path.exists(filepath)
+        file_parts = glob.glob(f'{filepath}*')
+        if len(file_parts) == 0 and file_exist:
+            LOGGER.warning('DATA LOSS! -> %s', filepath)
+
+        size_bytes = sum([os.path.getsize(file_part) for file_part in file_parts])
         snowflake_types = postgres.map_column_types_to_target(table)
         snowflake_columns = snowflake_types.get('columns', [])
         primary_key = snowflake_types.get('primary_key')
         postgres.close_connection()
 
         # Uploading to S3
-        s3_key = snowflake.upload_to_s3(filepath, table, tmp_dir=args.temp_dir)
-        os.remove(filepath)
+        s3_keys = []
+        for file_part in file_parts:
+            s3_keys.append(snowflake.upload_to_s3(file_part, tmp_dir=args.temp_dir))
+            os.remove(file_part)
+
+        # Create a pattern that match all file parts by removing multipart suffix
+        s3_key_pattern = (
+            re.sub(r'\.part\d*$', '', s3_keys[0])
+            if len(s3_keys) > 0
+            else 'NO_FILES_TO_LOAD'
+        )
 
         # Creating temp table in Snowflake
         snowflake.create_schema(target_schema)
-        snowflake.create_table(target_schema, table, snowflake_columns, primary_key, is_temporary=True)
+        snowflake.create_table(
+            target_schema, table, snowflake_columns, primary_key, is_temporary=True
+        )
 
         # Load into Snowflake table
-        snowflake.copy_to_table(s3_key, target_schema, table, size_bytes, is_temporary=True)
+        snowflake.copy_to_table(
+            s3_key_pattern, target_schema, table, size_bytes, is_temporary=True
+        )
+
+        for s3_key in s3_keys:
+            if archive_load_files:
+                # Copy load file to archive
+                snowflake.copy_to_archive(s3_key, tap_id, table)
+
+            # Delete all file parts from s3
+            snowflake.s3.delete_object(Bucket=args.target.get('s3_bucket'), Key=s3_key)
 
         # Obfuscate columns
         snowflake.obfuscate_columns(target_schema, table)
@@ -143,30 +181,43 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
 def main_impl():
     """Main sync logic"""
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-    cpu_cores = utils.get_cpu_cores()
+    pool_size = utils.get_pool_size(args.tap)
     start_time = datetime.now()
     table_sync_excs = []
 
     # Log start info
-    LOGGER.info("""
+    LOGGER.info(
+        """
         -------------------------------------------------------
         STARTING SYNC
         -------------------------------------------------------
             Tables selected to sync        : %s
             Total tables selected to sync  : %s
-            CPU cores                      : %s
+            Pool size                      : %s
         -------------------------------------------------------
-        """, args.tables, len(args.tables), cpu_cores)
+        """,
+        args.tables,
+        len(args.tables),
+        pool_size,
+    )
 
-    # Start loading tables in parallel in spawning processes by
-    # utilising all available CPU cores
-    with multiprocessing.Pool(cpu_cores) as proc:
+    # if internal arg drop_pg_slot is set to True, then we drop the slot before starting resync
+    if args.drop_pg_slot:
+        FastSyncTapPostgres.drop_slot(args.tap)
+
+    # Start loading tables in parallel in spawning processes
+    with multiprocessing.Pool(pool_size) as proc:
         table_sync_excs = list(
-            filter(lambda x: not isinstance(x, bool), proc.map(partial(sync_table, args=args), args.tables)))
+            filter(
+                lambda x: not isinstance(x, bool),
+                proc.map(partial(sync_table, args=args), args.tables),
+            )
+        )
 
     # Log summary
     end_time = datetime.now()
-    LOGGER.info("""
+    LOGGER.info(
+        """
         -------------------------------------------------------
         SYNC FINISHED - SUMMARY
         -------------------------------------------------------
@@ -174,11 +225,16 @@ def main_impl():
             Tables loaded successfully     : %s
             Exceptions during table sync   : %s
 
-            CPU cores                      : %s
+            Pool size                      : %s
             Runtime                        : %s
         -------------------------------------------------------
-        """, len(args.tables), len(args.tables) - len(table_sync_excs), str(table_sync_excs),
-                cpu_cores, end_time - start_time)
+        """,
+        len(args.tables),
+        len(args.tables) - len(table_sync_excs),
+        str(table_sync_excs),
+        pool_size,
+        end_time - start_time,
+    )
 
     if len(table_sync_excs) > 0:
         sys.exit(1)

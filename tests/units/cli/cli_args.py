@@ -7,21 +7,24 @@ CLI Arguments Class for unit tests
 class CliArgs:
     """Class to simulate argparse command line arguments required by PipelineWise class"""
 
-    def __init__(self,
-                 target='*',
-                 tap='*',
-                 tables=None,
-                 dir='*',
-                 name='*',
-                 secret=None,
-                 string=None,
-                 log='*',
-                 extra_log=False,
-                 debug=False,
-                 profiler=False
-                 ):
+    def __init__(
+        self,
+        target='*',
+        tap='*',
+        taps='*',
+        tables=None,
+        dir='*',
+        name='*',
+        secret=None,
+        string=None,
+        log='*',
+        extra_log=False,
+        debug=False,
+        profiler=False,
+    ):
         self.target = target
         self.tap = tap
+        self.taps = taps
         self.tables = tables
         self.dir = dir
         self.name = name

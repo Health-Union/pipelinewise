@@ -4,11 +4,10 @@
 Tap PostgreSQL
 --------------
 
+The Singer tap is at `pipelinewise-tap-postgres <https://github.com/transferwise/pipelinewise-tap-postgres>`_
 
 PostgreSQL setup requirements
 '''''''''''''''''''''''''''''
-
-*(Section based on Stitch documentation)*
 
 **Step 1: Check if you have all the required credentials for replicating data from PostgreSQL**
 
@@ -59,7 +58,9 @@ In order for pipelinewise user to automatically be able to access any tables cre
 
 **Step 3.1: Install the wal2json plugin**
 
-To use :ref:`log_based` for your PostgreSQL integration, you must install the `wal2json <https://github.com/eulerto/wal2json>`_ plugin. The wal2json plugin outputs JSON objects for logical decoding, which Stitch then uses to perform Log-based Replication.
+To use :ref:`log_based` for your PostgreSQL integration, you must install the `wal2json <https://github
+.com/eulerto/wal2json>`_ plugin that has support for format-version=2 (wal2json >= 2.3). The wal2json plugin outputs
+JSON objects for logical decoding, which the tap then uses to perform Log-based Replication.
 
 Steps for installing the plugin vary depending on your operating system. Instructions for each operating system type are in the wal2json’s GitHub repository:
 
@@ -86,34 +87,18 @@ This should be sufficient unless you have a large number of read replicas connec
 
 Restart your PostgreSQL service to ensure the changes take effect.
 
-**Step 3.4: Create a replication slot**
+**Step 3.4: Replication slot**
 
-Next, you’ll create a dedicated logical replication slot for Stitch. In PostgreSQL, a logical replication
-slot represents a stream of database changes that can then be replayed to a client in the order they were
-made on the original server. Each slot streams a sequence of changes from a single database.
+In PostgreSQL, a logical replication slot represents a stream of database changes that can then be replayed to a
+client in the order they were made on the original server. Each slot streams a sequence of changes from a single
+database.
 
-**Note**: Replication slots are specific to a given database in a cluster. If you want to connect
-multiple databases - whether in one integration or several - you’ll need to create a replication slot
-for each database.
+Pipelinewise automatically creates a dedicated logical replication slot for each database and tap.
 
-1. Log into the master database as a superuser.
 
-2. Using the ``wal2json`` plugin, create a logical replication slot:
+.. note:: ``wal2json`` is required to use :ref:`log_based` in Pipelinewise for PostgreSQL-backed databases.
 
-.. code-block:: bash
-
-    SELECT *
-    FROM pg_create_logical_replication_slot('pipelinewise_<database_name>', 'wal2json');
-
-3. Log in as the PipelineWise user and verify you can read from the replication slot,
-replacing ``pipelinewise_<database_name>`` with the name of the replication slot:
-
-.. code-block:: bash
-
-    SELECT COUNT(*)
-    FROM pg_logical_slot_peek_changes('pipelinewise_<database_name>', null, null);
-
-**Note**: ``wal2json`` is required to use :ref:`log_based` in Stitch for PostgreSQL-backed databases.
+.. note:: In case of full resync of a whole tap, Pipelinewise will attempt to drop the slot.
 
 
 Configuring what to replicate
@@ -125,7 +110,7 @@ following the steps in the :ref:`generating_pipelines` section.
 
 Example YAML for ``tap-postgres``:
 
-.. code-block:: bash
+.. code-block:: yaml
 
     ---
 
@@ -137,6 +122,7 @@ Example YAML for ``tap-postgres``:
     type: "tap-postgres"                   # !! THIS SHOULD NOT CHANGE !!
     owner: "somebody@foo.com"              # Data owner to contact
     #send_alert: False                     # Optional: Disable all configured alerts on this tap
+    #slack_alert_channel: "#tap-channel"   # Optional: Sending a copy of specific tap alerts to this slack channel
 
 
     # ------------------------------------------------------------------------------
@@ -163,7 +149,10 @@ Example YAML for ``tap-postgres``:
       #ssl: "true"                         # Optional: Using SSL via postgres sslmode 'require' option.
                                            #           If the server does not accept SSL connections or the client
                                            #           certificate is not recognized the connection will fail
-
+      fastsync_parallelism: <int>          # Optional: size of multiprocessing pool used by FastSync
+                                           #           Min: 1
+                                           #           Default: number of CPU cores
+      #limit: 50000                        # Optional: limit to add to incremental queries, this is useful to avoid long running transactions on the DB
 
     # ------------------------------------------------------------------------------
     # Destination (Target) - Target properties
@@ -172,6 +161,15 @@ Example YAML for ``tap-postgres``:
     target: "snowflake"                    # ID of the target connector where the data will be loaded
     batch_size_rows: 20000                 # Batch size for the stream to optimise load performance
     stream_buffer_size: 0                  # In-memory buffer size (MB) between taps and targets for asynchronous data pipes
+    #batch_wait_limit_seconds: 3600        # Optional: Maximum time to wait for `batch_size_rows`. Available only for snowflake target.
+
+    # Options only for Snowflake target
+    #split_large_files: False                       # Optional: split large files to multiple pieces and create multipart zip files. (Default: False)
+    #split_file_chunk_size_mb: 1000                 # Optional: File chunk sizes if `split_large_files` enabled. (Default: 1000)
+    #split_file_max_chunks: 20                      # Optional: Max number of chunks if `split_large_files` enabled. (Default: 20)
+    #archive_load_files: False                      # Optional: when enabled, the files loaded to Snowflake will also be stored in `archive_load_files_s3_bucket`
+    #archive_load_files_s3_prefix: "archive"        # Optional: When `archive_load_files` is enabled, the archived files will be placed in the archive S3 bucket under this prefix.
+    #archive_load_files_s3_bucket: "<BUCKET_NAME>"  # Optional: When `archive_load_files` is enabled, the archived files will be placed in this bucket. (Default: the value of `s3_bucket` in target snowflake YAML)
 
 
     # ------------------------------------------------------------------------------
@@ -201,6 +199,13 @@ Example YAML for ``tap-postgres``:
           # You can add as many tables as you need...
           - table_name: "table_two"
             replication_method: "LOG_BASED"     # Important! Log based must be enabled in MySQL
+
+           - table_name: "table_three"
+             replication_method: "LOG_BASED"
+             sync_start_from:                   # Optional, applies for then first sync and fast sync
+               column: "column_name"            # column name to be picked for partial sync with inremental or timestamp value
+               value: "start_value"             # The first sync always starts from column >= value
+               drop_target_table: true          # Optional, drops target table before syncing. default value is false
 
       # You can add as many schemas as you need...
       # Uncomment this if you want replicate tables from multiple schemas

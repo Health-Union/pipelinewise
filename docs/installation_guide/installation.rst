@@ -98,14 +98,14 @@ PipelineWise CLI and every supported singer connectors into separated virtual en
 
     $ git clone https://github.com/transferwise/pipelinewise.git
     $ cd ./pipelinewise
-    $ ./install.sh --connectors=all
+    $ make pipelinewise all_connectors
 
 Press ``Y`` to accept the license agreement of the required singer components. To automate
 the installation and accept every license agreement run ``./install --acceptlicenses``.
 
 .. code-block:: bash
 
-    $ ./install.sh --connectors=all
+    $ make pipelinewise all_connectors
 
     (...installation usually takes 5-10 minutes...)
 
@@ -131,7 +131,7 @@ running:
 
 .. code-block:: bash
 
-    $ ./install.sh --connectors=tap-mysql,tap-postgres,target-snowflake
+    $ make pipelinewise connectors -e pw_connector=tap-mysql,tap-postgres,target-snowflake
 
 .. warning::
 
@@ -146,8 +146,6 @@ Here’s the list of the singer connectors and if they are installed by default 
 | **Connector**              | **Install Command**                         | **Included in default install?** | **Note**                              |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | all                        | ./install --connectors=all                  |                                  | Installs every supported connector    |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-adwords                | ./install --connectors=tap-adwords          | NO                               |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-github                 | ./install --connectors=tap-github           | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
@@ -182,6 +180,8 @@ Here’s the list of the singer connectors and if they are installed by default 
 | tap-shopify                | ./install --connectors=tap-shopify          | NO                               |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-mixpanel               | ./install --connectors=tap-mixpanel         | YES                              |                                       |
++----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
+| tap-twilio                 | ./install --connectors=tap-twilio           | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | target-postgres            | ./install --connectors=target-postgres      | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+

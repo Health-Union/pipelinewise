@@ -13,17 +13,9 @@ components and uses it automatically whenever it’s possible.
 
 ## Supported tap-target routes
 
-* MySQL to Snowflake.
-* MySQL to Redshift
-* MySQL to Postgres
 
-* Postgres to Snowflake
-* Postgres to Redshift
-* Postgres to Postgres
-
-* S3 CSV to Snowflake
-* S3 CSV to Redshift
-* S3 CSV to Postgres
-
-* MongoDB to Snowflake
-* MongoDB to Postgres
+| Source        | Destination                                                 |
+|---------------|-------------------------------------------------------------|
+| MySQL/MariaDB | * BigQuery<br />* Snowflake<br />* Postgres<br />* Redshift |
+| Postgres      | * BigQuery<br />* Snowflake<br />* Postgres<br />* Redshift |
+| MongoDB       | * BigQuery<br />* Snowflake<br />* Postgres<br />           |

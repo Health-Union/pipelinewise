@@ -4,11 +4,8 @@
 Tap MySQL
 ---------
 
-
 MySQL setup requirements
 ''''''''''''''''''''''''
-
-*(Section based on Stitch documentation)*
 
 **Step 1: Check if you have all the required credentials for replicating data from MySQL**
 
@@ -92,9 +89,15 @@ following the steps in the :ref:`generating_pipelines` section.
   Read more info about this decision in `this github issue <https://github.com/singer-io/tap-mysql/issues/82>`_
   or browse the codebase `here <https://github.com/transferwise/pipelinewise-tap-mysql/blob/34cbd9b085146c08003bfa460f1550ce78c65e4c/tap_mysql/__init__.py#L73>`_.
 
+
+.. note::
+
+  This tap supports :ref:`log_based` replication method with GTID position for both Mariadb and Mysql.
+
+
 Example YAML for ``tap-mysql``:
 
-.. code-block:: bash
+.. code-block:: yaml
 
   ---
 
@@ -106,6 +109,7 @@ Example YAML for ``tap-mysql``:
   type: "tap-mysql"                      # !! THIS SHOULD NOT CHANGE !!
   owner: "somebody@foo.com"              # Data owner to contact
   #send_alert: False                     # Optional: Disable all configured alerts on this tap
+  #slack_alert_channel: "#tap-channel"   # Optional: Sending a copy of specific tap alerts to this slack channel
 
 
   # ------------------------------------------------------------------------------
@@ -117,6 +121,8 @@ Example YAML for ``tap-mysql``:
     user: "<USER>"                       # MySQL/ MariaDB user
     password: "<PASSWORD>"               # Plain string or vault encrypted
     dbname: "<DB_NAME>"                  # MySQL/ MariaDB database name
+    use_gtid: <boolean>                  # Flag to enable using GTID as the state bookmark for log based tables
+    engine: "mariadb/mysql"              # Flavor of the server, used in conjunction with "use_gtid"
     #filter_dbs: "schema1,schema2"       # Optional: Scan only the required schemas
                                          #           to improve the performance of
                                          #           data extraction
@@ -128,6 +134,9 @@ Example YAML for ``tap-mysql``:
     #  - SET @@session.net_read_timeout=3600
     #  - SET @@session.innodb_lock_wait_timeout=3600
 
+    fastsync_parallelism: <int>          # Optional: size of multiprocessing pool used by FastSync
+                                         #           Min: 1
+                                         #           Default: number of CPU cores
 
   # ------------------------------------------------------------------------------
   # Destination (Target) - Target properties
@@ -136,6 +145,15 @@ Example YAML for ``tap-mysql``:
   target: "snowflake"                    # ID of the target connector where the data will be loaded
   batch_size_rows: 20000                 # Batch size for the stream to optimise load performance
   stream_buffer_size: 0                  # In-memory buffer size (MB) between taps and targets for asynchronous data pipes
+  #batch_wait_limit_seconds: 3600        # Optional: Maximum time to wait for `batch_size_rows`. Available only for snowflake target.
+
+  # Options only for Snowflake target
+  #split_large_files: False                       # Optional: split large files to multiple pieces and create multipart zip files. (Default: False)
+  #split_file_chunk_size_mb: 1000                 # Optional: File chunk sizes if `split_large_files` enabled. (Default: 1000)
+  #split_file_max_chunks: 20                      # Optional: Max number of chunks if `split_large_files` enabled. (Default: 20)
+  #archive_load_files: False                      # Optional: when enabled, the files loaded to Snowflake will also be stored in `archive_load_files_s3_bucket`
+  #archive_load_files_s3_prefix: "archive"        # Optional: When `archive_load_files` is enabled, the archived files will be placed in the archive S3 bucket under this prefix.
+  #archive_load_files_s3_bucket: "<BUCKET_NAME>"  # Optional: When `archive_load_files` is enabled, the archived files will be placed in this bucket. (Default: the value of `s3_bucket` in target snowflake YAML)
 
 
   # ------------------------------------------------------------------------------
@@ -165,6 +183,13 @@ Example YAML for ``tap-mysql``:
         # You can add as many tables as you need...
         - table_name: "table_two"
           replication_method: "LOG_BASED"     # Important! Log based must be enabled in MySQL
+
+        - table_name: "table_three"
+          replication_method: "LOG_BASED"
+          sync_start_from:                   # Optional, applies for then first sync and fast sync
+            column: "column_name"            # column name to be picked for partial sync with incremental or timestamp value
+            value: "start_value"             # The first sync always starts from column >= value
+            drop_target_table: true          # Optional, drops target table before syncing. default value is false
 
     # You can add as many schemas as you need...
     # Uncomment this if you want replicate tables from multiple schemas

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "schema": {
       "type": "object",
@@ -20,6 +20,68 @@
       "required": [
         "source_schema",
         "target_schema"
+      ]
+    },
+    "db_conn": {
+      "type": "object",
+      "properties": {
+        "use_gtid": {
+          "type": "boolean"
+        },
+        "engine": {
+          "enum": ["mariadb", "mysql"]
+        },
+        "fastsync_parallelism": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "use_message_key": {
+          "type": "boolean"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 1000000
+        }
+      }
+    },
+    "condition": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "column": {
+              "type": "string",
+              "minLength": 1
+            },
+            "field_path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "equals": {
+              "type": ["null", "integer", "string", "boolean", "number"]
+            }
+          },
+          "required": ["column", "equals"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "column": {
+              "type": "string"
+            },
+            "regex_match": {
+              "type": "string"
+            },
+            "field_path": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": ["column", "regex_match"]
+        }
       ]
     },
     "table": {
@@ -84,9 +146,19 @@
     },
     "transformation": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "column": {
-          "type": "string"
+          "type": "string",
+          "minLength": 1
+        },
+        "field_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
         },
         "type": {
           "type": "string",
@@ -104,8 +176,24 @@
             "HASH-SKIP-FIRST-9",
             "MASK-DATE",
             "MASK-NUMBER",
-            "MASK-HIDDEN"
+            "MASK-HIDDEN",
+            "MASK-STRING-SKIP-ENDS-1",
+            "MASK-STRING-SKIP-ENDS-2",
+            "MASK-STRING-SKIP-ENDS-3",
+            "MASK-STRING-SKIP-ENDS-4",
+            "MASK-STRING-SKIP-ENDS-5",
+            "MASK-STRING-SKIP-ENDS-6",
+            "MASK-STRING-SKIP-ENDS-7",
+            "MASK-STRING-SKIP-ENDS-8",
+            "MASK-STRING-SKIP-ENDS-9"
           ]
+        },
+        "when": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/condition"
+          },
+          "minItems": 1
         }
       },
       "required": [
@@ -115,6 +203,7 @@
     },
     "s3_csv_mapping": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "search_prefix": {
           "type": "string"
@@ -187,6 +276,67 @@
         }
       },
       "required": ["type"]
+    },
+    "is_tap_github": {
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["tap-github"]
+        }
+      }
+    },
+    "tap_github": {
+      "anyOf": [
+        {
+          "not": {
+            "$ref": "#/definitions/is_tap_github"
+          }
+        },
+        {
+          "required": ["db_conn"],
+          "properties": {
+            "db_conn": {
+              "type": "object",
+              "required": ["access_token", "start_date"],
+              "properties": {
+                "access_token": {
+                  "type": "string"
+                },
+                "start_date": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "organization": {
+                  "type": "string"
+                },
+                "repos_include": {
+                  "type": "string"
+                },
+                "repos_exclude": {
+                  "type": "string"
+                },
+                "repository": {
+                  "type": "string"
+                },
+                "include_archived": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "include_disabled": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "max_rate_limit_wait_seconds": {
+                  "type": "integer",
+                  "default": 600,
+                  "minimum": 600,
+                  "maximum": 3600
+                }
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "type": "object",
@@ -204,7 +354,6 @@
         "tap-mongodb",
         "tap-mysql",
         "tap-oracle",
-        "tap-adwords",
         "tap-zendesk",
         "tap-kafka",
         "tap-s3-csv",
@@ -223,8 +372,12 @@
         "tap-facebook-pages"
       ]
     },
+    "slack_alert_channel": {
+      "type": "string",
+      "pattern": "^#"
+    },
     "db_conn": {
-      "type": "object"
+      "$ref": "#/definitions/db_conn"
     },
     "target": {
       "type": "string"
@@ -232,12 +385,25 @@
     "batch_size_rows": {
       "type": "integer",
       "minimum": 1000,
-      "maximum": 1000000
+      "maximum": 5000000
     },
     "stream_buffer_size": {
       "type": "integer",
       "minimum": 0,
       "maximum": 2500
+    },
+    "split_large_files": {
+      "type": "boolean"
+    },
+    "split_file_chunk_size_mb": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 5000
+    },
+    "split_file_max_chunks": {
+      "type": "integer",
+      "min": 1,
+      "max": 99999
     },
     "schemas": {
       "type": "array",
@@ -249,6 +415,9 @@
   "allOf": [
     {
       "$ref": "#/definitions/tap_mongo_implies_ft_and_lb"
+    },
+    {
+      "$ref": "#/definitions/tap_github"
     }
   ],
   "required": [

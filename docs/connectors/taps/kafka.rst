@@ -10,14 +10,10 @@ Messages from kafka topics are extracted into the following fields:
 * ``MESSAGE_OFFSET``: Offset extracted from the kafka metadata
 * ``MESSAGE_PARTITION``: Partition extracted from the kafka metadata
 * ``MESSAGE``: The original and full kafka message
+* ``MESSAGE_KEY``: (Optional) Key extracted from the Kafka message.
 * `Dynamic primary key columns`: (Optional) Fields extracted from the Kafka JSON messages by JSONPath selector(s).
 
-Consuming Kafka messages
-''''''''''''''''''''''''
-
-Tap Kafka saves consumed messages into a local disk storage and sends commit messages to Kafka after every
-consumed message. A batching mechanism keeps maintaining of deleting and flushing messages from the local storage
-and sends singer compatible messages in small batches to standard output.
+Supported message formats: JSON and Protobuf (experimental).
 
 
 Configuring what to replicate
@@ -29,7 +25,7 @@ following the steps in the :ref:`generating_pipelines` section.
 
 Example YAML for ``tap-kafka``:
 
-.. code-block:: bash
+.. code-block:: yaml
 
     ---
 
@@ -41,6 +37,7 @@ Example YAML for ``tap-kafka``:
     type: "tap-kafka"                      # !! THIS SHOULD NOT CHANGE !!
     owner: "somebody@foo.com"              # Data owner to contact
     #send_alert: False                     # Optional: Disable all configured alerts on this tap
+    #slack_alert_channel: "#tap-channel"   # Optional: Sending a copy of specific tap alerts to this slack channel
 
 
     # ------------------------------------------------------------------------------
@@ -51,7 +48,6 @@ Example YAML for ``tap-kafka``:
       bootstrap_servers: "kafka1.foo.com:9092,kafka2.foo.com:9092,kafka3.foo.com:9092"
       topic: "myKafkaTopic"
 
-
       # --------------------------------------------------------------------------
       # Optionally you can define primary key(s) from the kafka JSON messages.
       # If primary keys defined then extra column(s) will be added to the output
@@ -59,20 +55,43 @@ Example YAML for ``tap-kafka``:
       # --------------------------------------------------------------------------
       primary_keys:
          transfer_id: "/transferMetadata/transferId"
+      
+      # --------------------------------------------------------------------------
+      # Additionally you can specify whether to use Kafka message key as a primary key.
+      # If custom primary keys were specified earlier, message key property is ignored
+      # and custom PKs are used instead.
+      # ! Message key should be a valid utf-8 encoded string.
+      # --------------------------------------------------------------------------      
+      use_message_key:                          # (Default: true)  
+
+      #initial_start_time:                      # (Default: latest) Start time reference of the message consumption if
+                                                # no bookmarked position in state.json. One of: latest, earliest or an
+                                                # ISO-8601 formatted timestamp string.
 
       # --------------------------------------------------------------------------
-      # Kafka Consumer optional parameters
+      # Kafka Consumer optional parameters. Commented values are default values.
       # --------------------------------------------------------------------------
       #max_runtime_ms: 300000                   # The maximum time for the tap to collect new messages from Kafka topic.
       #consumer_timeout_ms: 10000               # KafkaConsumer setting. Number of milliseconds to block during message iteration before raising StopIteration
       #session_timeout_ms: 30000                # KafkaConsumer setting. The timeout used to detect failures when using Kafka’s group management facilities.
       #heartbeat_interval_ms: 10000             # KafkaConsumer setting. The expected time in milliseconds between heartbeats to the consumer coordinator when using Kafka’s group management facilities.
       #max_poll_interval_ms: 300000             # KafkaConsumer setting. The maximum delay between invocations of poll() when using consumer group management.
-      #max_poll_records: 500                    # KafkaConsumer setting. The maximum number of records returned in a single call to poll().
 
       #commit_interval_ms: 5000                 # Number of milliseconds between two commits. This is different than the kafka auto commit feature. Tap-kafka sends commit messages automatically but only when the data consumed successfully and persisted to local store.
-      #local_store_dir: ./tap-kafka-local-store # Path to the local store with consumed kafka messages
-      #local_store_batch_size_rows: 1000        # Number of messages to write to disk in one go. This can avoid high I/O issues when messages written to local store disk too frequently.
+
+      # --------------------------------------------------------------------------
+      # Protobuf support - Experimental
+      # --------------------------------------------------------------------------
+      #message_format: protobuf                 # (Default: json) Supported message formats are json and protobuf.
+      #proto_schema: |                          # Protobuf message format in .proto syntax. Required if the message_format is protobuf.
+      #     syntax = "proto3";                  
+      #
+      #     message ProtoMessage {          
+      #       string query = 1;
+      #       int32 page_number = 2;
+      #       int32 result_per_page = 3;
+      #     }
+      #proto_classess_dir:                      # (Default: current working dir) Directory where to store runtime compiled proto classes
 
 
     # ------------------------------------------------------------------------------
@@ -85,6 +104,12 @@ Example YAML for ``tap-kafka``:
     default_target_schema: "kafka"            # Target schema where the data will be loaded
     default_target_schema_select_permission:  # Optional: Grant SELECT on schema and tables that created
       - grp_stats
+    #batch_wait_limit_seconds: 3600           # Optional: Maximum time to wait for `batch_size_rows`. Available only for snowflake target.
+
+    # Options only for Snowflake target
+    #archive_load_files: False                      # Optional: when enabled, the files loaded to Snowflake will also be stored in `archive_load_files_s3_bucket`
+    #archive_load_files_s3_prefix: "archive"        # Optional: When `archive_load_files` is enabled, the archived files will be placed in the archive S3 bucket under this prefix.
+    #archive_load_files_s3_bucket: "<BUCKET_NAME>"  # Optional: When `archive_load_files` is enabled, the archived files will be placed in this bucket. (Default: the value of `s3_bucket` in target snowflake YAML)
 
 
     # ------------------------------------------------------------------------------

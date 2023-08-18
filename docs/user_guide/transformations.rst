@@ -4,8 +4,8 @@
 Transformations
 ---------------
 
-PipelineWise can perform row level load time transformations between tap and target components
-and makes and ideal place to obfuscate, mask or filter sensitive data that should never be replicated in the Data Warehouse.
+PipelineWise can perform row level load time transformations between tap and target components and makes and ideal
+place to obfuscate, mask or filter sensitive data that should never be replicated into the data warehouse.
 
 
 .. warning::
@@ -28,17 +28,32 @@ Transformation Methods
 
 The following transformations can be added optionally into the :ref:`yaml_configuration`:
 
-* **SET-NULL**: Transforms any column to NULL
+* **SET-NULL**: Transforms any column to NULL.
 
-* **HASH**: Transforms string columns to hash
+* **HASH**: Transforms string columns to hash.
 
-* **HASH-SKIP-FIRST-n**: Transforms string columns to hash skipping first n characters, e.g. HASH-SKIP-FIRST-2
+* **HASH-SKIP-FIRST-n**: Transforms string columns to hash skipping first n characters, e.g. HASH-SKIP-FIRST-2.
 
-* **MASK-DATE**: Replaces the months and day parts of date columns to be always 1st of Jan
+* **MASK-DATE**: Replaces the months and day parts of date columns to be always 1st of Jan.
 
-* **MASK-NUMBER**: Transforms any numeric column to zero
+* **MASK-NUMBER**: Transforms any numeric column to zero.
 
-* **MASK-HIDDEN**: Transforms any string column value to 'hidden'
+* **MASK-HIDDEN**: Transforms any string column value to 'hidden'.
+
+* **MASK-STRING-SKIP-ENDS-n**: Transforms string columns to masked version skipping first and last n characters, e.g. MASK-STRING-SKIP-ENDS-3
+
+
+.. _transformation_validation:
+
+Transformation validation
+'''''''''''''''''''''''''
+
+PipelineWise will run a transformation validation as part of the `import` logic, the validation consists of making sure
+that the transformation type is compatible with the column/field it's being applied to, e.g `HASH` can only be
+applied to string type fields.
+
+The validation will also take place at runtime, ie `run_tap`, to make sure any changes to a stream schema are still
+compatible with the configured transformation.
 
 
 .. _conditional_transformations:
@@ -77,7 +92,7 @@ in the :ref:`yaml_configuration`:
               - column: "property_name"
                 equals: 'passwordHash'
 
-                # Tip: Use 'regex_match' instead of 'equal' if you need
+                # Tip: Use 'regex_match' instead of 'equals' if you need
                 # more complex matching criteria. For example:
                 # regex_match: 'password|salt|passwordHash'
 
@@ -88,6 +103,22 @@ in the :ref:`yaml_configuration`:
                 equals: 'com.transferwise.fx.user.User'
               - column: "property_name"
                 equals: 'passwordHash'
+
+          - column: "column_3"
+            type: "HASH"
+            when:
+              - column: "json_column"
+                field_path: 'metadata/property_name'
+                equals: 'passwordHash'
+
+      - table_name: "users"
+        replication_method: "LOG_BASED"
+        transformations:
+          - column: "json_column"
+            field_paths:
+              - "user/info/phone"
+              - "user/info/addresses/0"
+            type: "SET-NULL"
     ...
     ...
 

@@ -17,6 +17,7 @@ db_conn:
   aws_secret_access_key: "${TAP_S3_CSV_AWS_SECRET_ACCESS_KEY}"  # Plain string or vault encrypted
   bucket: "${TAP_S3_CSV_BUCKET}"                                # S3 Bucket name
   start_date: "2000-01-01"                                      # File before this data will be excluded
+  fastsync_parallelism: 10
 
  
 # ------------------------------------------------------------------------------
@@ -40,7 +41,7 @@ default_target_schema: "ppw_e2e_tap_s3_csv"
 # ------------------------------------------------------------------------------
 schemas:
   - source_schema: "s3_feeds" # This is mandatory, but can be anything in this tap type
-    target_schema: "ppw_e2e_tap_s3_csv" # Target schema in the destination Data Warehouse
+    target_schema: "ppw_e2e_tap_s3_csv${TARGET_SNOWFLAKE_SCHEMA_POSTFIX}" # Target schema in the destination Data Warehouse
     
     # List of CSV files to destination tables
     tables:
@@ -56,7 +57,9 @@ schemas:
           - column: "email"
             type: "HASH"
           - column: "group"
-            type: "HASH"
+            type: "MASK-HIDDEN"
+          - column: "ip_address"
+            type: "SET-NULL"
 
       - table_name: "countries"
         s3_csv_mapping:

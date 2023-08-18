@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import os
 import sys
-import time
-from functools import partial
-from argparse import Namespace
 import multiprocessing
-from typing import Union
 
+from argparse import Namespace
+from typing import Union
+from functools import partial
 from datetime import datetime
+
 from ..logger import Logger
 from .commons import utils
 from .commons.tap_postgres import FastSyncTapPostgres
@@ -16,20 +16,8 @@ from .commons.target_redshift import FastSyncTargetRedshift
 LOGGER = Logger().get_logger(__name__)
 
 REQUIRED_CONFIG_KEYS = {
-    'tap': [
-        'host',
-        'port',
-        'user',
-        'password'
-    ],
-    'target': [
-        'host',
-        'port',
-        'user',
-        'password',
-        'dbname',
-        's3_bucket'
-    ]
+    'tap': ['host', 'port', 'user', 'password'],
+    'target': ['host', 'port', 'user', 'password', 'dbname', 's3_bucket'],
 }
 
 DEFAULT_VARCHAR_LENGTH = 10000
@@ -39,7 +27,7 @@ LONG_VARCHAR_LENGTH = 65535
 LOCK = multiprocessing.Lock()
 
 
-def tap_type_to_target_type(pg_type):
+def tap_type_to_target_type(pg_type, *_):
     """Data type mapping from MySQL to Redshift"""
     return {
         'char': 'CHARACTER VARYING({})'.format(DEFAULT_VARCHAR_LENGTH),
@@ -84,7 +72,9 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
 
     try:
         dbname = args.tap.get('dbname')
-        filename = 'pipelinewise_fastsync_{}_{}_{}.csv.gz'.format(dbname, table, time.strftime('%Y%m%d-%H%M%S'))
+        filename = utils.gen_export_filename(
+            tap_id=args.target.get('tap_id'), table=table
+        )
         filepath = os.path.join(args.temp_dir, filename)
         target_schema = utils.get_target_schema(args.target, table)
 
@@ -92,7 +82,9 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
         postgres.open_connection()
 
         # Get bookmark - LSN position or Incremental Key value
-        bookmark = utils.get_bookmark_for_table(table, args.properties, postgres, dbname=dbname)
+        bookmark = utils.get_bookmark_for_table(
+            table, args.properties, postgres, dbname=dbname
+        )
 
         # Exporting table data, get table definitions and close connection to avoid timeouts
         postgres.copy_table(table, filepath)
@@ -103,15 +95,19 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
         postgres.close_connection()
 
         # Uploading to S3
-        s3_key = redshift.upload_to_s3(filepath, table)
+        s3_key = redshift.upload_to_s3(filepath)
         os.remove(filepath)
 
         # Creating temp table in Redshift
         redshift.drop_table(target_schema, table, is_temporary=True)
-        redshift.create_table(target_schema, table, redshift_columns, primary_key, is_temporary=True)
+        redshift.create_table(
+            target_schema, table, redshift_columns, primary_key, is_temporary=True
+        )
 
         # Load into Redshift table
-        redshift.copy_to_table(s3_key, target_schema, table, size_bytes, is_temporary=True)
+        redshift.copy_to_table(
+            s3_key, target_schema, table, size_bytes, is_temporary=True
+        )
 
         # Obfuscate columns
         redshift.obfuscate_columns(target_schema, table)
@@ -142,34 +138,47 @@ def sync_table(table: str, args: Namespace) -> Union[bool, str]:
 def main_impl():
     """Main sync logic"""
     args = utils.parse_args(REQUIRED_CONFIG_KEYS)
-    cpu_cores = utils.get_cpu_cores()
+    pool_size = utils.get_pool_size(args.tap)
     start_time = datetime.now()
     table_sync_excs = []
 
     # Log start info
-    LOGGER.info("""
+    LOGGER.info(
+        """
         -------------------------------------------------------
         STARTING SYNC
         -------------------------------------------------------
             Tables selected to sync        : %s
             Total tables selected to sync  : %s
-            CPU cores                      : %s
+            Pool size                      : %s
         -------------------------------------------------------
-        """, args.tables, len(args.tables), cpu_cores)
+        """,
+        args.tables,
+        len(args.tables),
+        pool_size,
+    )
+
+    # if internal arg drop_pg_slot is set to True, then we drop the slot before starting resync
+    if args.drop_pg_slot:
+        FastSyncTapPostgres.drop_slot(args.tap)
 
     # Create target schemas sequentially, Redshift doesn't like it running in parallel
     redshift = FastSyncTargetRedshift(args.target, args.transform)
     redshift.create_schemas(args.tables)
 
-    # Start loading tables in parallel in spawning processes by
-    # utilising all available CPU cores
-    with multiprocessing.Pool(cpu_cores) as proc:
+    # Start loading tables in parallel in spawning processes
+    with multiprocessing.Pool(pool_size) as proc:
         table_sync_excs = list(
-            filter(lambda x: not isinstance(x, bool), proc.map(partial(sync_table, args=args), args.tables)))
+            filter(
+                lambda x: not isinstance(x, bool),
+                proc.map(partial(sync_table, args=args), args.tables),
+            )
+        )
 
     # Log summary
     end_time = datetime.now()
-    LOGGER.info("""
+    LOGGER.info(
+        """
         -------------------------------------------------------
         SYNC FINISHED - SUMMARY
         -------------------------------------------------------
@@ -177,11 +186,16 @@ def main_impl():
             Tables loaded successfully     : %s
             Exceptions during table sync   : %s
 
-            CPU cores                      : %s
+            Pool size                      : %s
             Runtime                        : %s
         -------------------------------------------------------
-        """, len(args.tables), len(args.tables) - len(table_sync_excs), str(table_sync_excs),
-                cpu_cores, end_time - start_time)
+        """,
+        len(args.tables),
+        len(args.tables) - len(table_sync_excs),
+        str(table_sync_excs),
+        pool_size,
+        end_time - start_time,
+    )
 
     if len(table_sync_excs) > 0:
         sys.exit(1)

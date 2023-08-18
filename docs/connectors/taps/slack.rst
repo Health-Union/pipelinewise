@@ -37,7 +37,7 @@ following the steps in the :ref:`generating_pipelines` section.
 
 Example YAML for ``tap-slack``:
 
-.. code-block:: bash
+.. code-block:: yaml
 
     ---
 
@@ -49,6 +49,7 @@ Example YAML for ``tap-slack``:
     type: "tap-slack"                      # !! THIS SHOULD NOT CHANGE !!
     owner: "somebody@foo.com"              # Data owner to contact
     #send_alert: False                     # Optional: Disable all configured alerts on this tap
+    #slack_alert_channel: "#tap-channel"   # Optional: Sending a copy of specific tap alerts to this slack channel
 
 
     # ------------------------------------------------------------------------------
@@ -86,6 +87,12 @@ Example YAML for ``tap-slack``:
     default_target_schema: "slack"            # Target schema where the data will be loaded
     #default_target_schema_select_permission:  # Optional: Grant SELECT on schema and tables that created
     #  - grp_power
+    #batch_wait_limit_seconds: 3600            # Optional: Maximum time to wait for `batch_size_rows`. Available only for snowflake target.
+
+    # Options only for Snowflake target
+    #archive_load_files: False                      # Optional: when enabled, the files loaded to Snowflake will also be stored in `archive_load_files_s3_bucket`
+    #archive_load_files_s3_prefix: "archive"        # Optional: When `archive_load_files` is enabled, the archived files will be placed in the archive S3 bucket under this prefix.
+    #archive_load_files_s3_bucket: "<BUCKET_NAME>"  # Optional: When `archive_load_files` is enabled, the archived files will be placed in this bucket. (Default: the value of `s3_bucket` in target snowflake YAML)
 
 
     # ------------------------------------------------------------------------------

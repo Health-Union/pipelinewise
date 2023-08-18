@@ -13,6 +13,9 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
+import datetime
+import importlib.metadata
+
 
 def setup(app):
     app.add_css_file('css/custom.css')
@@ -21,9 +24,9 @@ def setup(app):
 # -- Project information -----------------------------------------------------
 
 project = 'PipelineWise'
-copyright = '2020, TransferWise Ltd.'
-author = 'TransferWise'
-version = '0.26.0'
+copyright = f'{datetime.datetime.now().year}, Wise Ltd.'
+author = 'Wise'
+version = importlib.metadata.version('pipelinewise')
 
 
 # -- General configuration ---------------------------------------------------

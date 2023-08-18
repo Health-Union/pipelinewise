@@ -21,6 +21,7 @@ db_conn:
   user: "${TAP_POSTGRES_USER}"          # PostgreSQL user
   password: "${TAP_POSTGRES_PASSWORD}"  # Plain string or vault encrypted
   dbname: "${TAP_POSTGRES_DB}"          # PostgreSQL database name
+  fastsync_parallelism: 1
 
 
 # ------------------------------------------------------------------------------
@@ -60,6 +61,9 @@ schemas:
       - table_name: "edgydata"
         replication_method: "INCREMENTAL"
         replication_key: "cid"
+        transformations:
+          - column: "cvarchar"
+            type: "HASH-SKIP-FIRST-3"
 
       ### Table with reserved word
       - table_name: "order"
@@ -74,6 +78,21 @@ schemas:
       - table_name: "table_with_reserved_words"
         replication_method: "FULL_TABLE"
 
+      ### Table with INCREMENTAL replication
+      - table_name: "customers"
+        replication_method: "INCREMENTAL"
+        replication_key: "id"
+        transformations:
+          - column: "phone"
+            type: "MASK-STRING-SKIP-ENDS-2"
+
+          - column: "email"
+            type: "MASK-STRING-SKIP-ENDS-6"
+
+      ### Empty table
+      - table_name: "empty_table"
+        replication_method: "INCREMENTAL"
+        replication_key: "id"
 
   ### SOURCE SCHEMA 2: public2
   - source_schema: "public2"

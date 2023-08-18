@@ -1,9 +1,11 @@
 import os
+import pytest
 import re
 
-import pipelinewise.cli as cli
-import jsonschema
-import pytest
+from tempfile import TemporaryDirectory, NamedTemporaryFile
+
+from pipelinewise import cli
+from pipelinewise.cli.errors import InvalidConfigException
 
 VIRTUALENVS_DIR = './virtualenvs-dummy'
 
@@ -13,12 +15,11 @@ class TestUtils:
     """
     Unit Tests for PipelineWise CLI utility functions
     """
+
     def assert_json_is_invalid(self, schema, invalid_target):
-        """Simple assertion to check if validate function exits with error"""        
-        with pytest.raises(jsonschema.exceptions.ValidationError) as pytest_wrapped_e:
+        """Simple assertion to check if validate function exits with error"""
+        with pytest.raises(InvalidConfigException):
             cli.utils.validate(invalid_target, schema)
-        assert pytest_wrapped_e.type == jsonschema.exceptions.ValidationError
-        #assert pytest_wrapped_e.value.code == 1
 
     def test_json_detectors(self):
         """Testing JSON detector functions"""
@@ -128,6 +129,12 @@ class TestUtils:
                 '{}/resources/vault-secret.txt'.format(os.path.dirname(__file__))) == \
             ['Apple', 'Orange', 'Strawberry', 'Mango', 'Vault Encrypted Secret Fruit']
 
+        os.environ['APP_SECRET'] = app_secret = 'my-secret'
+        os.environ['APP_ENVIRONMENT'] = app_environment = 'test'
+        assert \
+            cli.utils.load_yaml('{}/resources/example-with-jinja-env-var.yml'.format(os.path.dirname(__file__))) == \
+            {'app': 'my-app', 'secret': app_secret, 'environment': app_environment}
+
     def test_sample_file_path(self):
         """Sample files must be global config, tap, target YAML or README file"""
         for sample in cli.utils.get_sample_file_paths():
@@ -219,7 +226,7 @@ class TestUtils:
         schema = cli.utils.load_schema('tap')
 
         # Valid instance should return None
-        valid_tap = cli.utils.load_yaml('{}/resources/tap-valid-mysql.yml'.format(os.path.dirname(__file__)))        
+        valid_tap = cli.utils.load_yaml('{}/resources/tap-valid-mysql.yml'.format(os.path.dirname(__file__)))
         assert cli.utils.validate(valid_tap, schema) is None
 
         # Invalid instance should exit
@@ -232,7 +239,6 @@ class TestUtils:
 
         # Valid instance should return None
         valid_target = cli.utils.load_yaml('{}/resources/target-valid-s3-csv.yml'.format(os.path.dirname(__file__)))
-        #breakpoint()
         assert cli.utils.validate(valid_target, schema) is None
 
         # Invalid instance should exit
@@ -266,14 +272,29 @@ class TestUtils:
         # Delete multiple keys from list of nested dictionaries
         assert cli.utils.delete_keys_from_dict(
             [{'foo': 'bar', 'foo2': 'bar2'},
-             {'foo3': {'nested_foo': 'nested_bar', 'nested_foo2': 'nested_bar2'}}], ['foo2', 'nested_foo']) == \
-               [{'foo': 'bar'},
-                {'foo3': {'nested_foo2': 'nested_bar2'}}]
+             {'foo3': {'nested_foo': 'nested_bar', 'nested_foo2': 'nested_bar2'}}],
+            ['foo2', 'nested_foo']) == [{'foo': 'bar'}, {'foo3': {'nested_foo2': 'nested_bar2'}}]
 
-    def test_silentremove(self):
-        """Test removing functions"""
-        # Deleting non existing file should not raise exception
+    def test_silentremove_success_if_file_doesnt_exist(self):
+        """Test removing a non-existing file should not raise exception"""
         assert cli.utils.silentremove('this-file-not-exists.json') is None
+
+    def test_silentremove_successfully_removes_file(self):
+        """Test removing a file that exists"""
+        with NamedTemporaryFile(delete=False) as file:
+            cli.utils.silentremove(file.name)
+            assert os.path.exists(file.name) is False
+
+    # pylint: disable=consider-using-with
+    def test_silentremove_successfully_removes_directory(self):
+        """Test removing an existing directory works"""
+        directory = TemporaryDirectory().name
+        cli.utils.silentremove(directory)
+        assert os.path.exists(directory) is False
+
+    def test_silentremove_success_if_directory_doesnt_exist(self):
+        """Test removing an existing directory works"""
+        assert cli.utils.silentremove('tmp/folder_doesnt_exist') is None
 
     def test_tap_properties(self):
         """Test tap property getter functions"""
@@ -407,3 +428,31 @@ class TestUtils:
         """generate_random_string given a length greater than or eq to 8 expect result"""
         random_str = cli.utils.generate_random_string(10)
         assert len(random_str) == 10
+
+    def test_create_backup_of_the_file(self):
+        """test if create_backup_of_the_file method works correctly when original file exists"""
+        with TemporaryDirectory() as temp_dir:
+            file_content = 'foo'
+            test_file = 'test.tmp'
+            # Creating the original file
+            with open(f'{temp_dir}/{test_file}', 'w', encoding='utf-8') as tmp_file:
+                tmp_file.write(file_content)
+
+            cli.utils.create_backup_of_the_file(f'{temp_dir}/test.tmp')
+
+            with open(f'{temp_dir}/{test_file}.bak', 'r', encoding='utf-8') as bak_file:
+                bak_content = bak_file.read()
+
+            assert bak_content == file_content
+
+    def test_create_backup_of_the_file_if_original_file_does_not_exist(self):
+        """test if create_backup_of_the_file method works correctly when original file not exists"""
+        with TemporaryDirectory() as temp_dir:
+            test_file = 'test.tmp'
+
+            cli.utils.create_backup_of_the_file(f'{temp_dir}/test.tmp')
+
+            with open(f'{temp_dir}/{test_file}.bak', 'r', encoding='utf-8') as bak_file:
+                bak_content = bak_file.read()
+
+            assert bak_content == 'ORIGINAL FILE DID NOT EXIST!'
