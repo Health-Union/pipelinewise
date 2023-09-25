@@ -25,6 +25,7 @@ class ConnectorType(enum.Enum):
     TAP_ZUORA = 'tap-zuora'
     TAP_FACEBOOK = 'tap-facebook'
     TAP_FACEBOOK_PAGES = 'tap-facebook-pages'
+    TAP_GOOGLE_ADS = 'tap-google-ads'
 
     TARGET_BIGQUERY = 'target-bigquery'
     TARGET_POSTGRES = 'target-postgres'
