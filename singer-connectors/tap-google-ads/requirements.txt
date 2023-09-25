@@ -1,0 +1,1 @@
+git+https://github.com/Health-Union/tap-google-ads.git@exo-support
