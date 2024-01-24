@@ -26,6 +26,7 @@ class ConnectorType(enum.Enum):
     TAP_FACEBOOK = 'tap-facebook'
     TAP_FACEBOOK_PAGES = 'tap-facebook-pages'
     TAP_GOOGLE_ADS = 'tap-google-ads'
+    TAP_ACTIVECAMPAIGN = 'tap-activecampaign'
 
     TARGET_BIGQUERY = 'target-bigquery'
     TARGET_POSTGRES = 'target-postgres'
