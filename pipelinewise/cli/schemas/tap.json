@@ -407,7 +407,8 @@
         "tap-twilio",
         "tap-facebook",
         "tap-facebook-pages",
-        "tap-google-ads"
+        "tap-google-ads",
+        "tap-activecampaign"
       ]
     },
     "slack_alert_channel": {

@@ -119,6 +119,7 @@ CURRENT_CONNECTORS=(
     tap-twilio
     tap-facebook
     tap-google-ads
+    tap-activecampaign
     target-snowflake
     target-s3-csv
     target-postgres
