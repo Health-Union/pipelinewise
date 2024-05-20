@@ -87,7 +87,7 @@ class Config:
             config.logger.info('LOADING TAP: %s', yaml_file)
             tap_data = utils.load_yaml(os.path.join(yaml_dir, yaml_file), vault_secret)
             utils.validate(instance=tap_data, schema=tap_schema)
-
+            breakpoint()
             tap_id = tap_data['id']
 
             # Check if a tap with same ID already exists
@@ -417,6 +417,7 @@ class Config:
                 schema_mapping[source_schema]['indices'] = indices
 
         # Generate tap inheritable_config dict
+        breakpoint()
         tap_inheritable_config = utils.delete_empty_keys(
             {
                 'temp_dir': self.get_temp_dir(),

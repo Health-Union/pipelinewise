@@ -21,6 +21,7 @@ LOGGER = Logger().get_logger(__name__)
 def partial_sync_table(table: tuple, args: Namespace) -> Union[bool, str]:
     """Partial sync table for Postgres to Snowflake"""
     snowflake = FastSyncTargetSnowflake(args.target, args.transform)
+    breakpoint()
     tap_id = args.target.get('tap_id')
     dbname = args.tap.get('dbname')
     try:

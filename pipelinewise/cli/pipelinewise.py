@@ -780,6 +780,7 @@ class PipelineWise:
         Test the tap connection. It will connect to the data source that is defined in the tap and will return
         success if it’s available.
         """
+        breakpoint()
         tap_id = self.tap['id']
         tap_type = self.tap['type']
         target_id = self.target['id']
@@ -835,7 +836,7 @@ class PipelineWise:
             tap = self.tap
         if target is None:
             target = self.target
-
+        breakpoint()
         # Define tap props
         tap_id = tap.get('id')
         tap_type = tap.get('type')
