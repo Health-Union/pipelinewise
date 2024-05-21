@@ -465,6 +465,7 @@ class PipelineWise:
         """
         Get tap by id from a specific target
         """
+        breakpoint()
         self.logger.debug('Getting %s tap from target %s', tap_id, target_id)
         taps = self.get_taps(target_id)
 
