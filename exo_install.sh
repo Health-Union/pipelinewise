@@ -106,6 +106,7 @@ EXTRA_CONNECTORS=(
 )
 
 CURRENT_CONNECTORS=(
+    tap-asana
     tap-google-sheets
     tap-s3-csv
     tap-mysql
