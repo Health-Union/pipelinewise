@@ -408,7 +408,8 @@
         "tap-facebook",
         "tap-facebook-pages",
         "tap-google-ads",
-        "tap-activecampaign"
+        "tap-activecampaign",
+        "tap-asana"
       ]
     },
     "slack_alert_channel": {
