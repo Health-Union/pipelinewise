@@ -4,12 +4,18 @@ import json
 import boto3
 import snowflake.connector
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from snowflake.connector.encryption_util import SnowflakeEncryptionUtil
 from snowflake.connector.storage_client import SnowflakeFileEncryptionMaterial
+from cryptography.hazmat.primitives.serialization import load_pem_private_key, \
+    Encoding, \
+    PrivateFormat, \
+    NoEncryption
+from cryptography.hazmat.backends import default_backend
 
 from . import utils
 from .transform_utils import TransformationHelper, SQLFlavor
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +66,30 @@ class FastSyncTargetSnowflake:
             endpoint_url=self.connection_config.get('s3_endpoint_url'),
         )
 
+
+    def _load_private_key(self, key_encoding: Encoding = Encoding.PEM, encoding: str=None) -> Union[bytes,str]:
+        """
+        Load private key from file
+        key_encoding:  The encoding of the private key. PEM or DER
+        encoding:      The encoding of the private key. utf-8 or None
+        Returns:
+            The private key in bytes or string format
+        """
+        # ./rsa_key.p8
+        key_path = self.connection_config.get(
+                        "private_key_path", "./rsa_key.p8")
+        password = self.connection_config.get(
+                        "private_key_password", None)
+        with open(key_path, 'rb') as pem_in:
+            private_key_obj = load_pem_private_key(
+                pem_in.read(), password=password, backend=default_backend())
+
+        private_key_raw = private_key_obj.private_bytes(
+            key_encoding, PrivateFormat.PKCS8, NoEncryption())
+
+        return private_key_raw.decode(encoding) if encoding else private_key_raw
+    
+
     def create_query_tag(self, query_tag_props: dict = None) -> str:
         schema = None
         table = None
@@ -79,9 +109,14 @@ class FastSyncTargetSnowflake:
         )
 
     def open_connection(self, query_tag_props=None):
+        # handling the case when a private_key is not provided in the config
+        if not ( private_key := self.connection_config.get('private_der_key') ):
+            private_key = self._load_private_key(
+                key_encoding=Encoding.DER, encoding='utf-8'
+            )
         return snowflake.connector.connect(
             user=self.connection_config['user'],
-            password=self.connection_config['password'],
+            private_key=private_key,
             account=self.connection_config['account'],
             database=self.connection_config['dbname'],
             warehouse=self.connection_config['warehouse'],
