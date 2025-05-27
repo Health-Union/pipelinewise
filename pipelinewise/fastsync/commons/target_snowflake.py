@@ -111,9 +111,7 @@ class FastSyncTargetSnowflake:
     def open_connection(self, query_tag_props=None):
         # handling the case when a private_key is not provided in the config
         if not ( private_key := self.connection_config.get('private_der_key') ):
-            private_key = self._load_private_key(
-                key_encoding=Encoding.DER, encoding='utf-8'
-            )
+            private_key = self._load_private_key(key_encoding=Encoding.DER)
         return snowflake.connector.connect(
             user=self.connection_config['user'],
             private_key=private_key,
