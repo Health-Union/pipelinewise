@@ -6,7 +6,7 @@ with open('README.md') as f:
     LONG_DESCRIPTION = f.read()
 
 setup(name='pipelinewise',
-      python_requires='==3.10.*',
+      python_requires='==3.9.*',
       version='0.54.0',
       description='PipelineWise',
       long_description=LONG_DESCRIPTION,
@@ -16,7 +16,7 @@ setup(name='pipelinewise',
       classifiers=[
           'License :: OSI Approved :: Apache Software License',
           'Programming Language :: Python :: 3 :: Only',
-          'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.9',
       ],
       install_requires=[
           'argparse==1.4.0',
