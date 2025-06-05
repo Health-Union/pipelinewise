@@ -1,0 +1,22 @@
+{   "switch_over_data_file": "/tmp/switch_over_test.json",
+    "targets": [
+        {
+            "id": "target_foo",
+            "type": "target-snowflake",
+            "taps": [
+                {
+                    "id": "tap_pg",
+                    "type": "tap-postgres"
+                },
+                {
+                    "id": "tap_bar",
+                    "type": "tap-bar"
+                },
+                {
+                    "id": "tap_mysql",
+                    "type": "tap-mysql"
+                }
+            ]
+        }
+    ]
+}

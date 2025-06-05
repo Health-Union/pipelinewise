@@ -1,3 +1,25 @@
+0.69.2 (2025-05-20)
+-------------------
+- Upgrade tap-snowflake Python library
+
+0.69.1 (2025-05-01)
+-------------------
+- Fix typo in config schema
+
+0.69.0 (2025-04-29)
+-------------------
+- Add `reset_state` command for MySQL taps
+
+0.68.0 (2025-01-10)
+-------------------
+- Bump `requests` from `2.20.0` to `2.32.2` in `/singer-connectors/tap-github`
+- Add `reset_state` command for PG taps
+
+0.67.0 (2024-11-19)
+-------------------
+- Fix map date column to correct Postgres type
+- New argument for sync tables to select replication method
+
 0.66.1 (2024-10-31)
 -------------------
 - Bug fix for partial sync multiprocessing
