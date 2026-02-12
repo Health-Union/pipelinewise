@@ -23,7 +23,8 @@ make_virtualenv() {
     python3 -m venv $VENV_DIR/$1
     source $VENV_DIR/$1/bin/activate && echo "Venv for $1 activated"
     echo "excuting in venv $VIRTUAL_ENV"
-    python3 -m pip install --upgrade pip setuptools
+    python3 -m pip install --upgrade pip
+    python3 -m pip install setuptools==68.2.2
     if [ -f "setup.py" ]; then
         echo "Installing pipelinewise package venv"
         python3 -m pip install --upgrade -e .
