@@ -118,7 +118,8 @@ define make_virtualenv
 	@source $(VENV_DIR)/$(1)/bin/activate
 	@echo -e "$(OK_MSG)"
 	@echo -e -n "$(YELLOW)"
-	@$(VENV_DIR)/$(1)/bin/python3 -m pip install --upgrade pip setuptools wheel
+	@$(VENV_DIR)/$(1)/bin/python3 -m pip install --upgrade pip wheel
+	@$(VENV_DIR)/$(1)/bin/python3 -m pip install setuptools==68.2.2
 	@echo -e "$(RESET_COLOR)"
 	@echo -n "Python setup tools updated..."
 	@echo -e "$(OK_MSG)"
