@@ -125,7 +125,6 @@ CURRENT_CONNECTORS=(
     target-snowflake
     target-s3-csv
     target-postgres
-    tap-facebook-pages
     transform-field
 )
 

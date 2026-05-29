@@ -16,33 +16,23 @@ PIP_ARGS="[test]"
 
 pw_connector=
 
+
 define DEFAULT_CONNECTORS
-tap-jira\
-tap-kafka\
-tap-mysql\
 tap-postgres\
+tap-jira\
+tap-mysql\
 tap-s3-csv\
-tap-salesforce\
+tap-google-ads\
+tap-asana\
+tap-activecampaign\
 tap-snowflake\
-tap-zendesk\
-tap-mongodb\
-tap-github\
-tap-slack\
-tap-mixpanel\
-tap-twilio\
 target-s3-csv\
 target-snowflake\
-target-redshift\
-target-postgres\
-target-bigquery\
 transform-field
 endef
 
 define EXTRA_CONNECTORS
-tap-oracle\
-tap-zuora\
-tap-google-analytics\
-tap-shopify
+tap-google-analytics
 endef
 
 define print_installed_connectors
