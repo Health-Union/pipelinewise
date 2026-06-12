@@ -107,24 +107,13 @@ EXTRA_CONNECTORS=(
 )
 
 CURRENT_CONNECTORS=(
-    tap-asana
-    tap-google-sheets
-    tap-s3-csv
+    tap-asana    
     tap-mysql
     tap-postgres
-    tap-s3-csv
-    tap-google-analytics
-    tap-github
-    tap-slack
-    tap-mongodb
-    tap-jira
-    tap-twilio
     tap-facebook
     tap-google-ads
     tap-activecampaign
     target-snowflake
-    target-s3-csv
-    target-postgres
     transform-field
 )
 
