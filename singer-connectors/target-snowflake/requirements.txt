@@ -1,1 +1,2 @@
-git+https://github.com/Health-Union/pipelinewise-target-snowflake.git
+# feature/DATA-11832-Pipelinewise-Upgrade
+git+https://github.com/Health-Union/pipelinewise-target-snowflake.git@feature/DATA-11832-Pipelinewise-Upgrade
