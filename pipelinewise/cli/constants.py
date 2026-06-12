@@ -23,6 +23,11 @@ class ConnectorType(enum.Enum):
     TAP_TWILIO = 'tap-twilio'
     TAP_ZENDESK = 'tap-zendesk'
     TAP_ZUORA = 'tap-zuora'
+    TAP_FACEBOOK = 'tap-facebook'
+
+    TAP_GOOGLE_ADS = 'tap-google-ads'
+    TAP_ACTIVECAMPAIGN = 'tap-activecampaign'
+    TAP_ASANA = 'tap-asana'
 
     TARGET_BIGQUERY = 'target-bigquery'
     TARGET_POSTGRES = 'target-postgres'
