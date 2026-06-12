@@ -6,7 +6,7 @@ with open('README.md') as f:
     long_description = f.read()
 
 setup(name="pipelinewise-target-snowflake",
-      version="2.3.0",
+      version="2.5.2",
       description="Singer.io target for loading data to Snowflake - PipelineWise compatible",
       long_description=long_description,
       long_description_content_type='text/markdown',
@@ -21,26 +21,27 @@ setup(name="pipelinewise-target-snowflake",
           'Programming Language :: Python :: 3.10',
       ],
       py_modules=["target_snowflake"],
-      python_requires='>=3.7',
+      python_requires='>=3.12.0, <3.13',
       install_requires=[
-          'pipelinewise-singer-python==2.*',
+          'pipelinewise-singer-python==3.0.2',
           'numpy==1.26.4',         #  numpy 2.X is not compatible with our used pandas
-          'snowflake-connector-python[pandas]==3.0.4',
+          'snowflake-connector-python[pandas]==3.15.0',
           'inflection==0.5.1',
           'joblib==1.2.0',
           'boto3==1.28.20',
       ],
       extras_require={
           "test": [
-              "pylint==2.12.*",
-              'pytest==7.4.0',
-              'pytest-cov==3.0.0',
-              "python-dotenv>=0.19,<1.1"
+              "pylint==4.0.5",
+              'pytest==9.0.3',
+              'pytest-cov==7.1.0',
+              "python-dotenv==1.2.2"
           ]
       },
       entry_points="""
           [console_scripts]
           target-snowflake=target_snowflake:main
+          copy-native-to-iceberg=target_snowflake:copy_native_to_iceberg
       """,
       packages=find_packages(exclude=['tests*']),
       )

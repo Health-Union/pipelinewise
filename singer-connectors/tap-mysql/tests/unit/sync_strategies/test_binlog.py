@@ -62,6 +62,18 @@ class TestBinlogSyncStrategy(TestCase):
 
         self.assertListEqual(['x', binlog.SDC_DELETED_AT], columns)
 
+    def test_binlog_filename_key(self):
+        self.assertEqual(binlog.binlog_filename_key('mysql-bin.000001'), ('mysql-bin', 1))
+        self.assertEqual(binlog.binlog_filename_key('mysql-bin.999999'), ('mysql-bin', 999999))
+        self.assertEqual(binlog.binlog_filename_key('mysql-bin.1000000'), ('mysql-bin', 1000000))
+        self.assertEqual(binlog.binlog_filename_key('mysql-bin.invalid'), ('mysql-bin.invalid', 0))
+        self.assertEqual(binlog.binlog_filename_key('plain_filename'), ('plain_filename', 0))
+        self.assertEqual(binlog.binlog_filename_key(None), (None, 0))
+
+        # Comparison tests
+        self.assertTrue(binlog.binlog_filename_key('mysql-bin.1000000') > binlog.binlog_filename_key('mysql-bin.999999'))
+        self.assertTrue(binlog.binlog_filename_key('mysql-bin.2') > binlog.binlog_filename_key('mysql-bin.1'))
+
     @patch('tap_mysql.sync_strategies.binlog.calculate_bookmark',
            return_value=('binlog0001', 50))
     @patch('tap_mysql.sync_strategies.binlog.fetch_current_log_file_and_pos',
@@ -2147,3 +2159,29 @@ class TestBinlogSyncStrategy(TestCase):
 
         self.assertEqual("Couldn't find any gtid in state bookmarks to resume logical replication",
                          str(context.exception))
+
+    def test_row_to_singer_record(self):
+        catalog_entry = CatalogEntry(
+            stream='stream',
+            schema=Schema.from_dict({
+                'type': 'object',
+                'properties': {
+                    'time': {
+                        'type': 'string',
+                        'format': 'time',
+                    },
+                },
+            }),
+        )
+        message = binlog.row_to_singer_record(
+            catalog_entry,
+            version=1,
+            row={'time': datetime.timedelta(hours=8, minutes=30)},
+            db_column_map={},
+            time_extracted=datetime.datetime.now(datetime.timezone.utc),
+        )
+
+        assert message.stream == 'stream'
+        assert message.version == 1
+        assert message.record == {'time': '08:30:00'}
+        assert message.time_extracted is not None

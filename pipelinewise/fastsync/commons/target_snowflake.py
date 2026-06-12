@@ -10,6 +10,7 @@ from snowflake.connector.storage_client import SnowflakeFileEncryptionMaterial
 
 from . import utils
 from .transform_utils import TransformationHelper, SQLFlavor
+from pipelinewise.utils import pem2der
 
 LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +18,7 @@ LOGGER = logging.getLogger(__name__)
 logging.getLogger('snowflake.connector').setLevel(logging.WARNING)
 
 
-# pylint: disable=missing-function-docstring,no-self-use,too-many-arguments
+# pylint: disable=missing-function-docstring,too-many-arguments
 class FastSyncTargetSnowflake:
     """
     Common functions for fastsync to Snowflake
@@ -81,10 +82,11 @@ class FastSyncTargetSnowflake:
     def open_connection(self, query_tag_props=None):
         return snowflake.connector.connect(
             user=self.connection_config['user'],
-            password=self.connection_config['password'],
+            private_key=pem2der(self.connection_config['private_key']),
             account=self.connection_config['account'],
             database=self.connection_config['dbname'],
             warehouse=self.connection_config['warehouse'],
+            authenticator='SNOWFLAKE_JWT',
             autocommit=True,
             session_parameters={
                 # Quoted identifiers should be case sensitive
@@ -212,6 +214,7 @@ class FastSyncTargetSnowflake:
         sql = 'DROP TABLE IF EXISTS {}."{}"'.format(target_schema, target_table.upper())
         self.query(sql, query_tag_props={'schema': target_schema, 'table': table_name})
 
+    # pylint: disable=too-many-positional-arguments
     def create_table(
         self,
         target_schema: str,
@@ -322,7 +325,7 @@ class FastSyncTargetSnowflake:
         stage = self.connection_config['stage']
         sql = (
             f'COPY INTO {target_schema}."{target_table.upper()}" FROM \'@{stage}/{s3_key}\''
-            f' FILE_FORMAT = (type=CSV escape=\'\\x1e\' escape_unenclosed_field=\'\\x1e\''
+            f' FILE_FORMAT = (type=CSV escape=NONE escape_unenclosed_field=\'\\x1e\''
             f' field_optionally_enclosed_by=\'\"\' skip_header={int(skip_csv_header)}'
             f' compression=GZIP binary_format=HEX)'
         )

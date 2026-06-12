@@ -1,3 +1,97 @@
+0.76.6 (2026-06-08)
+-------------------
+- Revert `zenpy` in `tap-zendesk` to `2.0.0`
+
+0.76.5 (2026-05-20)
+-------------------
+- Update zendesk retry strategy
+
+0.76.4 (2026-05-19)
+-------------------
+- Fix session http_adapter_kwargs in tap-zendesk
+
+0.76.3 (2026-05-19)
+-------------------
+- Fix session creation in tap-zendesk
+
+0.76.2 (2026-05-19)
+-------------------
+- Add retry for tap-zendesk if it fails by http error 502
+
+0.76.1 (2026-04-30)
+-------------------
+- Bump `requests` to `2.33.1`
+- Update `tap-salesforce` for Python 3.12
+
+0.76.0 (2026-04-16)
+-------------------
+- Updates for Python 3.12 
+
+0.75.0 (2026-04-07)
+-------------------
+- `pipelinewise-tap-postgres` from `2.1.0` to `2.2.0`
+    - Use wal2json non-row messages to detect that wal has moved on.
+
+0.74.4 (2026-03-30)
+-------------------
+- Better handling of CSV bulk upload to Snowflake during Full and Partial sync
+
+0.74.3 (2026-02-26)
+-------------------
+- `pipelinewise-target-snowflake` from `2.5.1` to `2.5.2`
+    - Support creating new Iceberg tables for pure Singer replications
+
+0.74.2 (2026-02-25)
+-------------------
+- `pipelinewise-target-snowflake` from `2.5.0` to `2.5.1`
+    - Support schema changes on existing Iceberg tables
+
+0.74.0 (2026-02-10)
+-------------------
+- `pipelinewise-target-snowflake` from `2.4.1` to `2.5.0`
+    - Add utility to migrate Native tables to Iceberg tables.
+    - Support updating data in Iceberg tables
+
+0.73.2 (2026-02-06)
+-------------------
+- Upgrade tap-github to 1.2.0 with enhanced rate limit handling
+- Fix `target-snowflake` crash when schema properties have no `type` (affecting Salesforce history streams like `LeadHistory` and `OpportunityFieldHistory`)
+- Bump `pipelinewise-target-snowflake` from `2.4.0` to `2.4.1`
+
+0.73.1 (2025-09-16)
+-------------------
+- Bump tap-jira version
+
+0.73.0 (2025-08-07)
+-------------------
+- Pair key authentication in target Snowflake
+
+0.72.3 (2025-07-28)
+-------------------
+- [HANDL-9246] Fix pagination in tap-twilio call summaries
+
+0.72.2 (2025-07-15)
+-------------------
+- Using `python:3.10-slim-bullseye` in Dockerfile and Dockerfile.barebone
+
+0.72.1 (2025-07-15)
+-------------------
+- Bump Python version in barebone docker image from `3.8` to `3.10`
+
+0.72.0 (2025-06-27)
+-------------------
+- Add twilio voice insights to twilio-tap
+
+0.71.0 (2025-06-10)
+-------------------
+- bump snowflake-connector-python[pandas] from `3.0.4` to `3.15.0`
+
+0.70.0 (2025-06-10)
+-------------------
+- Replace pkg_resource with importlib.metadata
+- Increase timeout to 6 minutes for e2e tests
+- bump psycopg2-binary from 2.9.5 to 2.9.10
+
 0.69.2 (2025-05-20)
 -------------------
 - Upgrade tap-snowflake Python library
@@ -1096,4 +1190,3 @@ Doc-only changes
 -------------------
 
 - Initial release
-

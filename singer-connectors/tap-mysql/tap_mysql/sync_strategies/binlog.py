@@ -42,6 +42,23 @@ MYSQL_TIMESTAMP_TYPES = {
 }
 
 
+def binlog_filename_key(filename: str) -> Tuple[str, int]:
+    """
+    Key function for sorting binlog filenames numerically by their suffix.
+
+    Args:
+        filename: Binlog filename
+
+    Returns:
+        Tuple of (prefix, numeric_suffix)
+    """
+    if filename and '.' in filename:
+        prefix, suffix = filename.rsplit('.', 1)
+        if suffix.isdigit():
+            return prefix, int(suffix)
+    return filename, 0
+
+
 def add_automatic_properties(catalog_entry, columns):
     catalog_entry.schema.properties[SDC_DELETED_AT] = Schema(
         type=["null", "string"],
@@ -199,7 +216,6 @@ def json_bytes_to_string(data):
 # pylint: disable=too-many-locals
 def row_to_singer_record(catalog_entry, version, db_column_map, row, time_extracted):
     row_to_persist = {}
-
     for column_name, val in row.items():
         property_type = catalog_entry.schema.properties[column_name].type
         property_format = catalog_entry.schema.properties[column_name].format
@@ -212,7 +228,7 @@ def row_to_singer_record(catalog_entry, version, db_column_map, row, time_extrac
                 # https://github.com/noplay/python-mysql-replication/blob/master/pymysqlreplication/row_event.py#L143
                 # -L145
                 timezone = tzlocal.get_localzone()
-                local_datetime = timezone.localize(val)
+                local_datetime = datetime.datetime.fromtimestamp(val.timestamp(), tz=timezone)
                 utc_datetime = local_datetime.astimezone(pytz.UTC)
                 row_to_persist[column_name] = utc_datetime.isoformat()
             else:
@@ -224,7 +240,10 @@ def row_to_singer_record(catalog_entry, version, db_column_map, row, time_extrac
         elif isinstance(val, datetime.timedelta):
             if property_format == 'time':
                 # this should convert time column into 'HH:MM:SS' formatted string
-                row_to_persist[column_name] = str(val)
+                _total_seconds = int(val.total_seconds())
+                _hours, _remainder = divmod(_total_seconds, 3600)
+                _minutes, _seconds = divmod(_remainder, 60)
+                row_to_persist[column_name] = f"{_hours:02}:{_minutes:02}:{_seconds:02}"
             else:
                 timedelta_from_epoch = datetime.datetime.utcfromtimestamp(0) + val
                 row_to_persist[column_name] = timedelta_from_epoch.isoformat() + '+00:00'
@@ -234,8 +253,7 @@ def row_to_singer_record(catalog_entry, version, db_column_map, row, time_extrac
 
         elif property_format == 'spatial':
             if val:
-                srid = int.from_bytes(val[:4], byteorder='little')
-                geom = Geometry(val[4:], srid=srid)
+                geom = Geometry(val)
                 row_to_persist[column_name] = json.dumps(geom.geojson)
             else:
                 row_to_persist[column_name] = None
@@ -420,7 +438,7 @@ def calculate_bookmark(mysql_conn, binlog_streams_map, state) -> Tuple[str, int]
                     raise Exception('Unable to replicate binlog stream because the following binary log(s) no longer '
                                     f'exist: {", ".join(expired_logs)}')
 
-                for log_file in sorted(server_logs_set):
+                for log_file in sorted(server_logs_set, key=binlog_filename_key):
                     if min_log_pos_per_file.get(log_file):
                         return log_file, min_log_pos_per_file[log_file]['log_pos']
 
@@ -500,8 +518,7 @@ def handle_update_rows_event(event, catalog_entry, state, columns, rows_saved, t
     db_column_types = get_db_column_types(event)
 
     for row in event.rows:
-        filtered_vals = {k: v for k, v in row['after_values'].items()
-                         if k in columns}
+        filtered_vals = {k: v for k, v in row['after_values'].items() if k in columns}
 
         record_message = row_to_singer_record(catalog_entry,
                                               stream_version,
@@ -580,10 +597,20 @@ def __get_diff_in_columns_list(
     # if a column no longer exists, the event will have something like __dropped_col_XY__
     # to refer to this column, we don't want these columns to be included in the difference
     # we also will ignore any column using the given ignore_columns argument.
-    binlog_columns_filtered = filter(
-        lambda col_name, ignored_cols=ignore_columns:
-        not bool(re.match(r'__dropped_col_\d+__', col_name) or col_name in ignored_cols),
-        [col.name for col in binlog_event.columns])
+
+    # binlog_columns_filtered = filter(
+    #     lambda col_name, ignored_cols=ignore_columns:
+    #     not bool(re.match(r'__dropped_col_\d+__', col_name) or col_name in ignored_cols),
+    #     [col.name for col in binlog_event.columns])
+
+    binlog_columns_filtered = [
+        col.name for col in binlog_event.columns
+        if col.name and not (
+                re.match(r'__dropped_col_\d+__', str(col.name)) or
+                col.name in ignore_columns
+        )
+    ]
+
 
     return set(binlog_columns_filtered).difference(schema_properties)
 
@@ -608,7 +635,6 @@ def _run_binlog_sync(
     # A set to hold all columns that are detected as we sync but should be ignored cuz they are unsupported types.
     # Saving them here to avoid doing the check if we should ignore a column over and over again
     ignored_columns = set()
-
     # Exit from the loop when the reader either runs out of streams to return or we reach
     # the end position (which is Master's)
     for binlog_event in reader:
@@ -620,7 +646,8 @@ def _run_binlog_sync(
         # The iterator across python-mysql-replication's fetchone method should ultimately terminate
         # upon receiving an EOF packet. There seem to be some cases when a MySQL server will not send
         # one causing binlog replication to hang.
-        if (log_file > end_log_file) or (end_log_file == log_file and log_pos >= end_log_pos):
+        if (binlog_filename_key(log_file) > binlog_filename_key(end_log_file)) or (
+                end_log_file == log_file and log_pos >= end_log_pos):
             LOGGER.info('BinLog reader (file: %s, pos:%s) has reached or exceeded end position, exiting!',
                         log_file,
                         log_pos)
@@ -885,7 +912,6 @@ def sync_binlog_stream(
 
         end_log_file, end_log_pos = fetch_current_log_file_and_pos(mysql_conn)
         LOGGER.info('Current Master binlog file and pos: %s %s', end_log_file, end_log_pos)
-
         _run_binlog_sync(mysql_conn, reader, binlog_streams_map, state, config, end_log_file, end_log_pos)
 
     finally:
