@@ -1400,7 +1400,7 @@ class PipelineWise:
             tables_to_sync = self.args.tables
 
         selected_tables = self._get_sync_tables_setting_from_selection_file(
-            tables_to_sync, self.args.replication_method_only)
+            tables_to_sync, getattr(self.args, 'replication_method_only', '*'))
 
         processes_list = []
         if selected_tables['partial_sync']:
