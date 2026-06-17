@@ -1400,7 +1400,7 @@ class PipelineWise:
             tables_to_sync = self.args.tables
 
         selected_tables = self._get_sync_tables_setting_from_selection_file(
-            tables_to_sync, self.args.replication_method_only)
+            tables_to_sync, getattr(self.args, 'replication_method_only', '*'))
 
         processes_list = []
         if selected_tables['partial_sync']:
@@ -2204,9 +2204,10 @@ TAP RUN SUMMARY
 
             # create a temp file with the content being the given catalog object
             # we need this file to execute the validation cli command
-            temp_catalog_file = utils.create_temp_file(
+            file_descriptor, temp_catalog_file = utils.create_temp_file(
                 dir=self.get_temp_dir(), prefix='properties_', suffix='.json'
-            )[1]
+            )
+            os.close(file_descriptor)
 
             utils.save_json(catalog, temp_catalog_file)
 
