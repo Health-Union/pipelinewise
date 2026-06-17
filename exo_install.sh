@@ -107,7 +107,7 @@ EXTRA_CONNECTORS=(
 )
 
 CURRENT_CONNECTORS=(
-    tap-asana    
+    tap-asana
     tap-mysql
     tap-postgres
     tap-facebook
