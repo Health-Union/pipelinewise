@@ -134,6 +134,10 @@ Example YAML for ``tap-postgres``:
       user: "<USER>"                       # PostfreSQL user
       password: "<PASSWORD>"               # Plain string or vault encrypted
       dbname: "<DB_NAME>"                  # PostgreSQL database name
+      #replica_host: "<REPLICA_HOST>"      # Optional: PostgresSQL replica host to offload initial/FastSync
+                                           #           to a read replica, switch back to primary for log-based 
+                                           #           replication. Used to resync large tables without impacting 
+                                           #           primary DB performance.
       #filter_schemas: "schema1,schema2"   # Optional: Scan only the required schemas
                                            #           to improve the performance of
                                            #           data extraction
@@ -200,14 +204,23 @@ Example YAML for ``tap-postgres``:
           - table_name: "table_two"
             replication_method: "LOG_BASED"     # Important! Log based must be enabled in MySQL
 
-           - table_name: "table_three"
-             replication_method: "LOG_BASED"
-             sync_start_from:                   # Optional, applies for then first sync and fast sync
-               column: "column_name"            # column name to be picked for partial sync with inremental or timestamp value
-               value: "start_value"             # The first sync always starts from column >= value
-               drop_target_table: true          # Optional, drops target table before syncing. default value is false
+          - table_name: "table_three"
+            replication_method: "LOG_BASED"
+            sync_start_from:                   # Optional, applies for then first sync and fast sync
+              column: "column_name"            # column name to be picked for partial sync with inremental or timestamp value
+              static_value: "start_value"      # A static value which the first sync always starts from column >= static_value
+              drop_target_table: true          # Optional, drops target table before syncing. default value is false
+
+          - table_name: "table_four"
+            replication_method: "LOG_BASED"
+            sync_start_from:                   # Optional, applies for then first sync and fast sync
+              column: "column_name"            # Column name to be picked for partial sync with incremental or timestamp value
+              dynamic_value: "A SELECT query   # It can be a valid PG SELECT query which returns only one row with one column and first sync always starts from column >= dynamic_value
+              drop_target_table: true          # Optional, drops target table before syncing. default value is false
 
       # You can add as many schemas as you need...
       # Uncomment this if you want replicate tables from multiple schemas
       #- source_schema: "another_schema_in_postgres" 
       #  target_schema: "another
+      # static and dynamic values can not be defined together for a table and only one of them can be used.
+

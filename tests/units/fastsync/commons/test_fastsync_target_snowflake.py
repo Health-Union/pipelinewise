@@ -22,7 +22,7 @@ class S3Mock:
     def copy_object(self, **kwargs):
         """Mock if needed"""
 
-    # pylint: disable=no-self-use, unused-argument
+    # pylint: disable=unused-argument
     def head_object(self, **kwargs):
         """Mock if needed"""
         return {}
@@ -228,7 +228,7 @@ class TestFastSyncTargetSnowflake(TestCase):
         )
         assert self.snowflake.executed_queries == [
             'COPY INTO test_schema."TEST_TABLE" FROM \'@dummy_stage/s3_key\''
-            ' FILE_FORMAT = (type=CSV escape=\'\\x1e\' escape_unenclosed_field=\'\\x1e\''
+            ' FILE_FORMAT = (type=CSV escape=NONE escape_unenclosed_field=\'\\x1e\''
             ' field_optionally_enclosed_by=\'\"\' skip_header=0'
             ' compression=GZIP binary_format=HEX)'
         ]
@@ -245,7 +245,7 @@ class TestFastSyncTargetSnowflake(TestCase):
         )
         assert self.snowflake.executed_queries == [
             'COPY INTO test_schema."FULL_TEMP" FROM \'@dummy_stage/s3_key\''
-            ' FILE_FORMAT = (type=CSV escape=\'\\x1e\' escape_unenclosed_field=\'\\x1e\''
+            ' FILE_FORMAT = (type=CSV escape=NONE escape_unenclosed_field=\'\\x1e\''
             ' field_optionally_enclosed_by=\'\"\' skip_header=0'
             ' compression=GZIP binary_format=HEX)'
         ]
@@ -262,7 +262,7 @@ class TestFastSyncTargetSnowflake(TestCase):
         )
         assert self.snowflake.executed_queries == [
             'COPY INTO test_schema."TABLE WITH SPACE AND UPPERCASE_TEMP" FROM \'@dummy_stage/s3 key with space\''
-            ' FILE_FORMAT = (type=CSV escape=\'\\x1e\' escape_unenclosed_field=\'\\x1e\''
+            ' FILE_FORMAT = (type=CSV escape=NONE escape_unenclosed_field=\'\\x1e\''
             ' field_optionally_enclosed_by=\'\"\' skip_header=0'
             ' compression=GZIP binary_format=HEX)']
 

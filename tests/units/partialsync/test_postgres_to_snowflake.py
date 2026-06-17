@@ -168,6 +168,7 @@ class PartialSyncTestCase(TestCase):
                         for message in log_messages:
                             self.assertIn(message, actual_logs.output[log_index])
 
+    # pylint: disable=too-many-positional-arguments
     @mock.patch('pipelinewise.fastsync.partialsync.utils.load_into_snowflake')
     @mock.patch('pipelinewise.fastsync.partialsync.utils.upload_to_s3')
     @mock.patch('pipelinewise.fastsync.commons.utils.save_state_file')
@@ -186,7 +187,7 @@ class PartialSyncTestCase(TestCase):
             args = PartialSync2SFArgs(temp_test_dir='FOO_DIR', end_value=end_value)
             test_table = (table_name, {
                 'column': 'foo_column',
-                'start_value': '1',
+                'start_value': '<S>1',
                 'end_value': end_value,
                 'drop_target_table': False,
             })
@@ -241,7 +242,9 @@ class PartialSyncTestCase(TestCase):
 
                 mocked_load_into_sf.assert_called_with(
                     target, args, columns_diff, maped_column_types_to_target['primary_key'],
-                    s3_key_pattern, file_size, f" WHERE {test_table[1]['column']} >= '{test_table[1]['start_value']}'")
+                    s3_key_pattern, file_size,
+                    f" WHERE {test_table[1]['column']} >= '{test_table[1]['start_value'][3:]}'"
+                )
 
                 if end_value:
                     mocked_save_state.assert_not_called()

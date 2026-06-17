@@ -12,14 +12,11 @@ concurrency:
 
 jobs:
   lint_and_test:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        python-version: ["3.9"]
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checking out repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4.1.7
 
       - name: Check if python changes are present
         id: check
@@ -29,11 +26,11 @@ jobs:
         continue-on-error: true
         run: ./scripts/ci_check_no_file_changes.sh python
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.12
         if: steps.check.outcome == 'failure'
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5.1.0
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.12'
 
       - name: Install dependencies
         if: steps.check.outcome == 'failure'
@@ -43,7 +40,7 @@ jobs:
         if: steps.check.outcome == 'failure'
         run: |
           . .virtualenvs/pipelinewise/bin/activate
-          find pipelinewise tests -type f -name '*.py' | xargs unify --check-only
+          ruff check pipelinewise tests
 
       - name: Pylinting
         if: steps.check.outcome == 'failure'

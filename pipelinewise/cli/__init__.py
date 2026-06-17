@@ -11,14 +11,14 @@ import logging
 from cProfile import Profile
 from datetime import datetime
 from typing import Optional, Tuple
-from pkg_resources import get_distribution
+from importlib.metadata import version
 
 from pipelinewise.cli.utils import generate_random_string
 from pipelinewise.cli.pipelinewise import PipelineWise
 from pipelinewise.logger import Logger
 from pipelinewise.cli.errors import CommandSpecificArgumentsException
 
-__version__ = get_distribution('pipelinewise').version
+__version__ = version('pipelinewise')
 USER_HOME = os.path.expanduser('~')
 DEFAULT_CONFIG_DIR = os.path.join(USER_HOME, '.pipelinewise')
 CONFIG_DIR = os.environ.get('PIPELINEWISE_CONFIG_DIRECTORY', DEFAULT_CONFIG_DIR)
@@ -40,7 +40,8 @@ COMMANDS = [
     'import_config',  # This is for backward compatibility; use 'import' instead
     'validate',
     'encrypt_string',
-    'partial_sync_table'
+    'partial_sync_table',
+    'reset_state'
 ]
 
 
@@ -150,7 +151,7 @@ def _validate_command_specific_arguments(args):
     if args.command == 'init' and args.name == '*':
         raise CommandSpecificArgumentsException('You must specify a project name using the argument --name')
 
-    if args.command in ['discover_tap', 'test_tap_connection', 'run_tap', 'stop_tap', 'sync_tables']:
+    if args.command in ['discover_tap', 'test_tap_connection', 'run_tap', 'stop_tap', 'sync_tables', 'reset_state']:
         if args.tap == '*':
             raise CommandSpecificArgumentsException('You must specify a source name using the argument --tap')
         if args.target == '*':
@@ -250,6 +251,11 @@ def main():
     parser.add_argument('--column', type=str, default='*', help='Name of the column to use as sync key in partial sync')
     parser.add_argument('--start_value', type=str, default='*', help='start value of the column to partial sync')
     parser.add_argument('--end_value', type=str, default=None, help='end value of the column to partial sync')
+    parser.add_argument('--force', default=False, required=False,
+                        help='Force sync_tables for full sync', action='store_true'
+                        )
+    parser.add_argument('--replication_method_only', default='*', type=str,
+                        help='Sync only tables which their replication method is as entered value')
 
     args = parser.parse_args()
 
@@ -259,7 +265,7 @@ def main():
     # import_config : this is for backward compatibility; use 'import' instead from CLI
     # Every command argument is mapped to a python function with the same name, but 'import' is a
     # python keyword and can't be used as function name
-    if args.command == 'import' or args.command == 'import_config':
+    if args.command in ['import', 'import_config']:
         args.command = 'import_project'
     try:
         _validate_command_specific_arguments(args)

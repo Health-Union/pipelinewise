@@ -24,7 +24,6 @@ class ConnectorType(enum.Enum):
     TAP_ZENDESK = 'tap-zendesk'
     TAP_ZUORA = 'tap-zuora'
     TAP_FACEBOOK = 'tap-facebook'
-    TAP_FACEBOOK_PAGES = 'tap-facebook-pages'
     TAP_GOOGLE_ADS = 'tap-google-ads'
     TAP_ACTIVECAMPAIGN = 'tap-activecampaign'
     TAP_ASANA = 'tap-asana'

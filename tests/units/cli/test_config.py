@@ -10,7 +10,6 @@ PIPELINEWISE_TEST_HOME = '/tmp/.pipelinewise'
 
 
 # Todo: Inherit from unittest.TestCase
-# pylint: disable=no-self-use,fixme
 class TestConfig:
     """
     Unit Tests for PipelineWise CLI Config class
@@ -95,7 +94,7 @@ class TestConfig:
                     'client_side_encryption_master_key': 'master_key',
                     'dbname': 'foo_db',
                     'file_format': 'foo_file_format',
-                    'password': 'secret',
+                    'private_key': 'private_key_path',
                     's3_bucket': 's3_bucket',
                     's3_key_prefix': 's3_prefix/',
                     'stage': 'foo_stage',
@@ -293,7 +292,7 @@ class TestConfig:
             'client_side_encryption_master_key': 'master_key',
             'dbname': 'foo_db',
             'file_format': 'foo_file_format',
-            'password': 'secret',
+            'private_key': 'private_key_path',
             's3_bucket': 's3_bucket',
             's3_key_prefix': 's3_prefix/',
             'stage': 'foo_stage',

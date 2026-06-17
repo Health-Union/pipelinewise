@@ -59,7 +59,7 @@ def class_to_string(key_value: Any, key_type: str) -> str:
     if key_type == 'datetime':
         if key_value.tzinfo is None:
             timezone = tzlocal.get_localzone()
-            local_datetime = timezone.localize(key_value)
+            local_datetime = datetime.datetime.fromtimestamp(key_value.timestamp(), tz=timezone)
             utc_datetime = local_datetime.astimezone(pytz.UTC)
         else:
             utc_datetime = key_value.astimezone(pytz.UTC)
@@ -90,7 +90,7 @@ def safe_transform_datetime(value: datetime.datetime, path) -> str:
     """
     timezone = tzlocal.get_localzone()
     try:
-        local_datetime = timezone.localize(value)
+        local_datetime = datetime.datetime.fromtimestamp(value.timestamp(), tz=timezone)
         utc_datetime = local_datetime.astimezone(pytz.UTC)
     except Exception as ex:
         if str(ex) == 'year is out of range' and value.year == 0:
@@ -139,6 +139,7 @@ def transform_value(value: Any, path) -> Any:
         datetime.datetime: lambda val, _: class_to_string(val, 'datetime'),
         bson.decimal128.Decimal128: lambda val, _: val.to_decimal(),
         bson.regex.Regex: lambda val, _: dict(pattern=val.pattern, flags=val.flags),
+        bson.binary.Binary: lambda val, _: class_to_string(val, 'bytes'),
         bson.code.Code: lambda val, _: dict(value=str(val), scope=str(val.scope))
         if val.scope
         else str(val),
@@ -180,7 +181,7 @@ def get_connection_string(config: Dict):
 
     # NB: "sslAllowInvalidCertificates" must ONLY be supplied if `SSL` is true.
     if not verify_mode and use_ssl:
-        connection_query['tlsAllowInvalidCertificates'] = 'true'
+        connection_query['tlsInsecure'] = 'true'
 
     query_string = parse.urlencode(connection_query)
 
@@ -234,7 +235,7 @@ class FastSyncTapMongoDB:
         """
         self.database.client.close()
 
-    # pylint: disable=R0914,R0913
+    # pylint: disable=R0914,R0913,R0917
     def copy_table(
         self,
         table_name: str,

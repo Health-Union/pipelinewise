@@ -40,6 +40,36 @@ add the ``--tables`` argument:
   as partial synced.
   Currently this option is available only for :ref:`tap-mysql` and :ref:`tap-postgres` to Snowflake.
 
+.. attention::
+
+  There is an option for :ref:`tap-mysql` and :ref:`tap-postgres` to :ref:`target-snowflake` in main pipelinewise
+  config file for ignoring resync in a case the size of a table in the tap is greater than the defined value.
+  this setting is optional and even yet you can force the resync by using ``--force`` argument.
+
+    $ pipelinewise sync_tables --target <target_id> --tap <tap_id> --force
+
+  this setting can be added in the `config.yml` for checking the table size:
+
+  .. code-block:: yaml
+
+     allowed_resync_max_size:
+       table_mb: <integer/float>
+
+
+.. attention::
+
+  There is an option to chose tables for re-sync which has a specific replication method by ``--replication_method_only <name of replication method>``
+
+   $ pipelinewise sync_tables --target <target_id> --tap <tap_id> --replication_method_only log_based
+
+.. attention:: 
+
+  It is possible to offload the resync to a read-replica by specifying the ``replica_host`` on MySQL/MariaDB and
+  PostgreSQL taps. This is useful when resyncing large tables without impacting the performance of the primary database.
+
+  See the relevant tap configuration documentation for more details.
+
+
 2. **Partial resync**
 
 If you want to partial resync a table from a specific tap then use the ``partial_sync_table`` command

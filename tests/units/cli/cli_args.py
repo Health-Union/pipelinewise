@@ -7,6 +7,7 @@ CLI Arguments Class for unit tests
 class CliArgs:
     """Class to simulate argparse command line arguments required by PipelineWise class"""
 
+    # pylint: disable=too-many-positional-arguments
     def __init__(
         self,
         target='*',
@@ -21,6 +22,8 @@ class CliArgs:
         extra_log=False,
         debug=False,
         profiler=False,
+        force=False,
+        replication_method_only='*'
     ):
         self.target = target
         self.tap = tap
@@ -34,6 +37,8 @@ class CliArgs:
         self.extra_log = extra_log
         self.debug = debug
         self.profiler = profiler
+        self.force = force
+        self.replication_method_only = replication_method_only
 
     # "log" Getters and setters
     @property

@@ -1,8 +1,221 @@
+0.76.6 (2026-06-08)
+-------------------
+- Revert `zenpy` in `tap-zendesk` to `2.0.0`
+
+0.76.5 (2026-05-20)
+-------------------
+- Update zendesk retry strategy
+
+0.76.4 (2026-05-19)
+-------------------
+- Fix session http_adapter_kwargs in tap-zendesk
+
+0.76.3 (2026-05-19)
+-------------------
+- Fix session creation in tap-zendesk
+
+0.76.2 (2026-05-19)
+-------------------
+- Add retry for tap-zendesk if it fails by http error 502
+
+0.76.1 (2026-04-30)
+-------------------
+- Bump `requests` to `2.33.1`
+- Update `tap-salesforce` for Python 3.12
+
+0.76.0 (2026-04-16)
+-------------------
+- Updates for Python 3.12 
+
+0.75.0 (2026-04-07)
+-------------------
+- `pipelinewise-tap-postgres` from `2.1.0` to `2.2.0`
+    - Use wal2json non-row messages to detect that wal has moved on.
+
+0.74.4 (2026-03-30)
+-------------------
+- Better handling of CSV bulk upload to Snowflake during Full and Partial sync
+
+0.74.3 (2026-02-26)
+-------------------
+- `pipelinewise-target-snowflake` from `2.5.1` to `2.5.2`
+    - Support creating new Iceberg tables for pure Singer replications
+
+0.74.2 (2026-02-25)
+-------------------
+- `pipelinewise-target-snowflake` from `2.5.0` to `2.5.1`
+    - Support schema changes on existing Iceberg tables
+
+0.74.0 (2026-02-10)
+-------------------
+- `pipelinewise-target-snowflake` from `2.4.1` to `2.5.0`
+    - Add utility to migrate Native tables to Iceberg tables.
+    - Support updating data in Iceberg tables
+
+0.73.2 (2026-02-06)
+-------------------
+- Upgrade tap-github to 1.2.0 with enhanced rate limit handling
+- Fix `target-snowflake` crash when schema properties have no `type` (affecting Salesforce history streams like `LeadHistory` and `OpportunityFieldHistory`)
+- Bump `pipelinewise-target-snowflake` from `2.4.0` to `2.4.1`
+
+0.73.1 (2025-09-16)
+-------------------
+- Bump tap-jira version
+
+0.73.0 (2025-08-07)
+-------------------
+- Pair key authentication in target Snowflake
+
+0.72.3 (2025-07-28)
+-------------------
+- [HANDL-9246] Fix pagination in tap-twilio call summaries
+
+0.72.2 (2025-07-15)
+-------------------
+- Using `python:3.10-slim-bullseye` in Dockerfile and Dockerfile.barebone
+
+0.72.1 (2025-07-15)
+-------------------
+- Bump Python version in barebone docker image from `3.8` to `3.10`
+
+0.72.0 (2025-06-27)
+-------------------
+- Add twilio voice insights to twilio-tap
+
+0.71.0 (2025-06-10)
+-------------------
+- bump snowflake-connector-python[pandas] from `3.0.4` to `3.15.0`
+
+0.70.0 (2025-06-10)
+-------------------
+- Replace pkg_resource with importlib.metadata
+- Increase timeout to 6 minutes for e2e tests
+- bump psycopg2-binary from 2.9.5 to 2.9.10
+
+0.69.2 (2025-05-20)
+-------------------
+- Upgrade tap-snowflake Python library
+
+0.69.1 (2025-05-01)
+-------------------
+- Fix typo in config schema
+
+0.69.0 (2025-04-29)
+-------------------
+- Add `reset_state` command for MySQL taps
+
+0.68.0 (2025-01-10)
+-------------------
+- Bump `requests` from `2.20.0` to `2.32.2` in `/singer-connectors/tap-github`
+- Add `reset_state` command for PG taps
+
+0.67.0 (2024-11-19)
+-------------------
+- Fix map date column to correct Postgres type
+- New argument for sync tables to select replication method
+
+0.66.1 (2024-10-31)
+-------------------
+- Bug fix for partial sync multiprocessing
+
+
+0.66.0 (2024-10-11)
+-------------------
+- Bump programming language to Python 3.10
+- Bump `ansible-core` from `2.11.8` to `2.17.5`
+- Bump `tzlocal` from `2.1.*` to `4.0.2` in `tap-mongodb`
+- Bump `tzlocal` from `2.1` to `4.0.2` in `tap-mysql`
+- Bump `pipelinewise-singer-python` from `1.*` to `2.*` in `target-postgres`
+- Bump `pipelinewise-singer-python` from `1.*` to `2.*` in `target-snowflake`
+
+
+0.65.3 (2024-09-13)
+-------------------
+- Bump `zenpy` in `tap-zendesk` from `2.0.0` to `2.0.52`
+
+0.65.2 (2024-09-05)
+-------------------
+- Pin tap-zendesk to v1.2.1
+
+0.65.0 (2024-08-27)
+-------------------
+- Remove FastSync for target Redshift
+- Remove FastSync for target Bigquery
+- Incorporate used singer connectors into main codebase
+- Reduce testing codebase
+- Simplify Makefile
+
+0.64.1 (2024-07-25)
+-------------------
+- Remove row count check in `sync_tables` for `tap_mysql` and `tap_postgres`
+
+0.64.0 (2024-07-19)
+-------------------
+- Update `sync_tables` and `import_config` commands
+  - new optional config setting for source tables size checking
+  - checking the size of source tables in `tap_mysql` and `tap_postgres` to `target_snowflake` and failing fast sync
+    if the size is not allowed
+  - added `--force` argument for `sync_tables` command to ignore size checking
+
+0.63.0 (2024-07-08)
+---------------------
+- Bump `pipelinewise-tap-jira`from `2.0.1` to `2.2.0`
+- Bump `jinja2`from `3.0.2` to `3.1.2`
+- Update Github Actions
+
+0.60.2b1 (2024-06-12)
+---------------------
+- Bump `pymongo`from `4.7.3` to `3.13.0`
+
+0.60.1 (2024-06-12)
+-------------------
+- Bump `pymongo`from `3.12.3` to `4.7.3`
+
+0.60.0 (2024-05-10)
+-------------------
+- Bump `pipelinewise-tap-mysql`from `1.5.6` to `1.6.0`
+- Attempt SSL for MariaDB and PG sources as Preferred connection method
+
+0.58.3 (2023-11-28)
+-------------------
+- Bump `pipelinewise-tap-kafka`from `8.2.0` to `8.2.1`
+
+0.58.2 (2023-11-20)
+-------------------
+- Bump `pipelinewise-tap-kafka`from `8.1.0` to `8.2.0`
+
+0.58.1 (2023-10-09)
+-------------------
+- Bump `pipelinewise-tap-github`from `1.1.0` to `1.1.1`
+
+0.58.0 (2023-10-04)
+-------------------
+- Bump `pipelinewise-tap-github`from `1.0.3` to `1.1.0`
+- Bump `joblib`from `1.2.0` to `1.3.2`
+
+0.57.0 (2023-08-09)
+-------------------
+
+- Bump `pipelinewise-tap-kafka`from `8.0.0` to `8.1.0`
+- Update dependencies
+
+0.56.0 (2023-08-09)
+-------------------
+
+- Bump `pipelinewise-target-snowflake`from `2.2.0` to `2.3.0`
+- Update dependencies
+
+0.55.0 (2023-07-25)
+-------------------
+
+- Bump `pipelinewise-tap-mysql`from `1.5.4` to `1.5.5`
+- Support for dynamic values in defined partial sync
+
 0.54.0 (2023-07-04)
 -------------------
 
-- Add support for the new limit config in `tap-postgres` 
-- Bump pipelinewise_tap_s3_csv from `3.0.0` to `3.0.1` 
+- Add support for the new limit config in `tap-postgres`
+- Bump pipelinewise_tap_s3_csv from `3.0.0` to `3.0.1`
 - Bump pipelinewise-tap-postgres from `1.8.4` to `2.1.0`
 - Bugfix replication slot creation in partial sync
 
@@ -33,7 +246,7 @@
 
 - Bugfix for renaming log files when stopping the tap
 - Bump `snowflake-connector-python` from `2.7.6` to `2.8.2`
-- Remove `tap-adwords` 
+- Remove `tap-adwords`
 
 0.52.2 (2023-03-20)
 -------------------
@@ -977,4 +1190,3 @@ Doc-only changes
 -------------------
 
 - Initial release
-

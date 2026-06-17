@@ -48,7 +48,7 @@ your host system. First you need to install docker on your computer:
 * `Install Docker on MacOS <https://runnable.com/docker/install-docker-on-macos>`_
 
 Once Docker is installed you need to clone the PipelineWise git repository and build the
-executable docker image:
+executable Docker image:
 
 .. code-block:: bash
 
@@ -58,8 +58,10 @@ executable docker image:
 
 
 Building the image may take 5-10 minutes depending on your network connection. The output image will
-contain every supporter singer connectors. At the moment there is no official, pre-built image available
-to download on DockerHub. Once the image is ready, create an alias to the docker wrapper script so you can
+contain every supported Singer connector. Alternatively, see `Official Docker Images <https://github.com/transferwise/pipelinewise?tab=readme-ov-file#official-docker-images>`_
+to pull a pre-built image. 
+
+Once the image is ready, create an alias to the Docker wrapper script so you can
 use the ``pipelinewise`` executable commands everywhere on your system:
 
 .. code-block:: bash
@@ -157,37 +159,23 @@ Here’s the list of the singer connectors and if they are installed by default 
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-mysql                  | ./install --connectors=tap-mysql            | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-oracle                 | ./install --connectors=tap-oracle           | NO                               |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-postgres               | ./install --connectors=tap-postgres         | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-s3-csv                 | ./install --connectors=tap-s3-csv           | YES                              |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-salesforce             | ./install --connectors=tap-salesforce       | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-snowflake              | ./install --connectors=tap-snowflake        | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-zendesk                | ./install --connectors=tap-zendesk          | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-zuora                  | ./install --connectors=tap-zuora            | NO                               |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-google-analytics       | ./install --connectors=tap-google-analytics | NO                               |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-github                 | ./install --connectors=tap-github           | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-slack                  | ./install --connectors=tap-slack            | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-shopify                | ./install --connectors=tap-shopify          | NO                               |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | tap-mixpanel               | ./install --connectors=tap-mixpanel         | YES                              |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| tap-twilio                 | ./install --connectors=tap-twilio           | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | target-postgres            | ./install --connectors=target-postgres      | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | target-s3-csv              | ./install --connectors=target-s3-csv        | YES                              |                                       |
-+----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
-| target-redshift            | ./install --connectors=target-redshift      | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+
 | target-snowflake           | ./install --connectors=target-snowflake     | YES                              |                                       |
 +----------------------------+---------------------------------------------+----------------------------------+---------------------------------------+

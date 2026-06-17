@@ -2,42 +2,58 @@
 
 set -e
 
+# Retry wrapper for apt-get to handle transient mirror errors
+apt_retry() {
+  local max_attempts=3
+  local attempt=1
+  while [ $attempt -le $max_attempts ]; do
+    if "$@"; then
+      return 0
+    fi
+    echo "apt command failed (attempt $attempt/$max_attempts), retrying in 5s..."
+    attempt=$((attempt + 1))
+    sleep 5
+    apt-get update
+  done
+  echo "apt command failed after $max_attempts attempts"
+  return 1
+}
+
 apt-get update
-apt-get install -y --no-install-recommends \
+apt_retry apt-get install -y software-properties-common apt-utils
+
+add-apt-repository ppa:deadsnakes/ppa
+apt-get update
+
+echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+
+apt_retry apt-get install -y --no-install-recommends \
   wget \
   gnupg \
-  git
-
-# Add Mongodb ppa
-wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | apt-key add -
-echo "deb https://repo.mongodb.org/apt/debian buster/mongodb-org/4.4 main" | tee /etc/apt/sources.list.d/mongodb-org-4.4.list
-
-apt-get update
-apt-get install -y --no-install-recommends \
+  git \
   alien \
   gettext-base \
-  libaio1 \
+  libaio1t64 \
   mariadb-client \
   mbuffer \
-  mongodb-database-tools \
-  mongodb-org-shell \
-  postgresql-client
+  postgresql-client \
+  python3.12-dev python3.12-venv
 
-rm -rf /var/lib/apt/lists/* \
+apt-get upgrade -y
 
-# Install Oracle Instant Client required for tap-oracle
-# ORA_INSTACLIENT_URL=https://download.oracle.com/otn_software/linux/instantclient/193000/oracle-instantclient19.3-basiclite-19.3.0.0.0-1.x86_64.rpm
-# wget -O oracle-instantclient.rpm ${ORA_INSTACLIENT_URL}
-# echo "Installing Oracle Instant Client for tap-oracle..."
-# alien -i oracle-instantclient.rpm --scripts
-# rm -f oracle-instantclient.rpm
+# Do a bunch of Mongo things
+wget -q https://downloads.mongodb.com/compass/mongodb-mongosh_2.2.9_amd64.deb
+apt-get install ./mongodb-mongosh_2.2.9_amd64.deb
+rm -f mongodb-mongosh_2.2.9_amd64.deb
+wget -q https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2004-x86_64-100.9.5.deb
+apt-get install ./mongodb-database-tools-ubuntu2004-x86_64-100.9.5.deb
+rm -f mongodb-database-tools-ubuntu2004-x86_64-100.9.5.deb
+
+dev-project/mongo/initiate-replica-set.sh
 
 # Build test databases
-
 tests/db/tap_mysql_db.sh
 tests/db/tap_postgres_db.sh
-
-dev-project/mongo/init_rs.sh
 tests/db/tap_mongodb.sh
 tests/db/target_postgres.sh
 

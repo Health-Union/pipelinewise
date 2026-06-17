@@ -122,10 +122,12 @@ class FastSyncTapMySql:
         self.conn: Connection = pymysql.connect(
             **conn_params,
             cursorclass=pymysql.cursors.DictCursor,
+            ssl={'': True}
         )
         self.conn_unbuffered: Connection = pymysql.connect(
             **conn_params,
             cursorclass=pymysql.cursors.SSCursor,
+            ssl={'': True}
         )
 
         # Set session variables by running a list of SQLs which is defined
@@ -345,6 +347,7 @@ class FastSyncTapMySql:
         schema_name = table_dict.get('schema_name')
         table_name = table_dict.get('table_name')
 
+        # pylint: disable=line-too-long
         sql = f"""
                 SELECT column_name AS column_name,
                     data_type AS data_type,
@@ -357,7 +360,7 @@ class FastSyncTapMySql:
                             WHEN data_type IN ('blob', 'tinyblob', 'mediumblob', 'longblob')
                                     THEN CONCAT('REPLACE(hex(`', column_name, '`)', ", '\n', ' ')")
                             WHEN data_type IN ('binary', 'varbinary')
-                                    THEN concat('REPLACE(REPLACE(hex(trim(trailing CHAR(0x00) from `',COLUMN_NAME,'`))', ", '\n', ' '), '\r', '')")
+                                    THEN concat('REPLACE(REPLACE(hex(`',COLUMN_NAME,'`)', ", '\n', ' '), '\r', '')")
                             WHEN data_type IN ('bit')
                                     THEN concat('cast(`', column_name, '` AS unsigned)')
                             WHEN data_type IN ('date')
@@ -383,6 +386,7 @@ class FastSyncTapMySql:
                 ORDER BY
                         ordinal_position
             """  # noqa: E501
+        # pylint: enable=line-too-long
         return self.query(sql)
 
     def map_column_types_to_target(self, table_name):
@@ -405,7 +409,7 @@ class FastSyncTapMySql:
             'primary_key': self.get_primary_keys(table_name),
         }
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals, too-many-positional-arguments
     def copy_table(
             self,
             table_name,
@@ -521,8 +525,11 @@ class FastSyncTapMySql:
 
         Returns: server uuid
         """
-        conn = pymysql.connect(**self.get_connection_parameters(prioritize_primary=True)[0],
-                               cursorclass=pymysql.cursors.DictCursor) if self.is_replica else None
+        conn = pymysql.connect(
+            **self.get_connection_parameters(prioritize_primary=True)[0],
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'': True}
+        ) if self.is_replica else None
 
         result = self.query('select @@server_uuid as server_uuid;', conn)
 
@@ -537,8 +544,11 @@ class FastSyncTapMySql:
 
         Returns: server uuid
         """
-        conn = pymysql.connect(**self.get_connection_parameters(prioritize_primary=True)[0],
-                               cursorclass=pymysql.cursors.DictCursor) if self.is_replica else None
+        conn = pymysql.connect(
+            **self.get_connection_parameters(prioritize_primary=True)[0],
+            cursorclass=pymysql.cursors.DictCursor,
+            ssl={'': True}
+        ) if self.is_replica else None
 
         result = self.query('select @@server_id as server_id;', conn)
 
