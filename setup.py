@@ -7,7 +7,7 @@ with open('README.md') as f:
 
 setup(name='pipelinewise',
       python_requires='==3.12.*',
-      version='0.76.6',
+      version='0.76.7',
       description='PipelineWise',
       long_description=LONG_DESCRIPTION,
       long_description_content_type='text/markdown',
@@ -28,7 +28,7 @@ setup(name='pipelinewise',
           'PyMySQL==1.1.2',
           'psycopg2-binary==2.9.10',
           'numpy==1.26.4',          #  numpy 2.X is not compatible with our used pandas
-          'snowflake-connector-python[pandas]==3.15.0',
+          'snowflake-connector-python[pandas]==4.8.1',
           'pipelinewise-singer-python==3.0.2',
           'python-pidfile==3.0.0',
           'pymongo>=4.7,<4.12',
