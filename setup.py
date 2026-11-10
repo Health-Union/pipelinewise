@@ -28,6 +28,7 @@ setup(name='pipelinewise',
           'PyMySQL==1.1.2',
           'psycopg2-binary==2.9.10',
           'numpy==1.26.4',          #  numpy 2.X is not compatible with our used pandas
+          'pyarrow>=14.0.1,<26.0.0',  # pyarrow 26+ requires numpy 2; connector 4.x no longer caps pyarrow
           'snowflake-connector-python[pandas]==4.8.1',
           'pipelinewise-singer-python==3.0.2',
           'python-pidfile==3.0.0',

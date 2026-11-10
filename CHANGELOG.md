@@ -3,6 +3,7 @@
 - DATA-12437: update `snowflake-connector-python[pandas]` 3.15.0 -> 4.8.1 in the core
   (fixes client vulnerabilities flagged by Snowflake Trust Center: CVE-2026-85525, CVE-2026-86600, CVE-2026-86597;
   first safe version is 4.7.3). Requires Python >= 3.11
+- Pin `pyarrow>=14.0.1,<26.0.0` (connector 4.x no longer caps pyarrow; pyarrow 26+ requires NumPy 2, core keeps `numpy==1.26.4`)
 
 0.76.6 (2026-06-08)
 -------------------
